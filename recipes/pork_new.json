@@ -1,0 +1,23 @@
+{
+  "id": "pork_new",
+  "profile": "jerky_standard",
+  "dry_mix_usage_per_kg": 14.7,
+  "dry_mix": {
+    "sweet_paprika": 3,
+    "smoked_paprika": 3,
+    "garlic_powder": 2,
+    "coriander": 2,
+    "cayenne_pepper": 1,
+    "ginger": 1,
+    "black_pepper": 1,
+    "nutmeg": 0.5,
+    "caraway": 1,
+    "anise": 0.2
+  },
+  "marinade": {
+    "curing_salt": 20,
+    "sugar": 5,
+    "soy_sauce": 50,
+    "water": 50
+  }
+}

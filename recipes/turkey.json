@@ -1,0 +1,20 @@
+{
+  "id": "turkey",
+  "profile": "jerky_standard",
+  "dry_mix_usage_per_kg": 20,
+  "dry_mix": {
+    "black_pepper": 2,
+    "garlic_powder": 2,
+    "sweet_paprika": 10,
+    "cayenne_pepper": 1,
+    "ginger": 1,
+    "thyme": 2,
+    "oregano": 2
+  },
+  "marinade": {
+    "curing_salt": 20,
+    "sugar": 3,
+    "soy_sauce": 50,
+    "water": 50
+  }
+}

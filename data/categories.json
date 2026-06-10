@@ -1,0 +1,18 @@
+{
+  "spice": {
+    "icon": "🌶️",
+    "color": "#E67E22"
+  },
+  "salt": {
+    "icon": "🧂",
+    "color": "#95A5A6"
+  },
+  "sweetener": {
+    "icon": "🍯",
+    "color": "#F1C40F"
+  },
+  "liquid": {
+    "icon": "🥣",
+    "color": "#3498DB"
+  }
+}

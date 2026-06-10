@@ -1,0 +1,17 @@
+{
+  "id": "pork_black_garlic",
+  "profile": "jerky_standard",
+  "dry_mix_usage_per_kg": 16,
+  "dry_mix": {
+    "smoked_paprika": 3,
+    "coriander": 3,
+    "black_fermented_garlic": 7,
+    "black_pepper": 2,
+    "cayenne_pepper": 1
+  },
+  "marinade": {
+    "curing_salt": 20,
+    "sugar": 5,
+    "water": 100
+  }
+}
