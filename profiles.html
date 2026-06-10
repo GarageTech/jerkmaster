@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Drying Profiles · JerkMaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet">
+</head>
+<body data-bs-theme="dark">
+<main class="container-fluid py-3">
+    <header class="app-header mb-4">
+        <img src="img/logo.png" alt="JerkMaster" class="jm-logo">
+        <div class="header-actions">
+            <nav class="page-nav">
+                <a href="index.html"><i class="bi bi-speedometer2"></i><span data-i18n="nav.dashboard">Dashboard</span></a>
+                <a href="ingredients.html"><i class="bi bi-basket2"></i><span data-i18n="nav.ingredients">Ingredients</span></a>
+                <a href="recipes.html"><i class="bi bi-journal-richtext"></i><span data-i18n="nav.recipes">Recipes</span></a>
+                <a href="profiles.html" class="active"><i class="bi bi-thermometer-half"></i><span data-i18n="nav.profiles">Profiles</span></a>
+                <a href="making-jerky.html"><i class="bi bi-stars"></i><span data-i18n="nav.making_jerky">Making Jerky</span></a>
+            </nav>
+            <select class="form-select language-select" data-language-select><option value="ru">RU</option><option value="en">EN</option><option value="ua">UA</option></select>
+        </div>
+    </header>
+    <section class="content-hero mb-3"><i class="bi bi-thermometer-half"></i><div><h1 data-i18n="profiles.title">Drying profiles</h1><p data-i18n="profiles.intro">Create and manage drying stages.</p></div></section>
+    <div class="management-toolbar mb-3"><button id="add-profile-btn" class="btn btn-success"><i class="bi bi-plus-lg"></i><span data-i18n="profiles.add">Add profile</span></button></div>
+    <div id="management-message" aria-live="polite"></div>
+    <section id="profile-grid" class="management-grid"></section>
+    <footer class="footer-row text-secondary mt-4 small"><span>JerkMaster v0.1.0</span><a href="https://github.com/GarageTech/jerkmaster" target="_blank" rel="noopener noreferrer" class="footer-github"><i class="bi bi-github"></i> GarageTech / JerkMaster</a></footer>
+</main>
+<dialog id="profile-dialog" class="ingredient-dialog">
+    <form id="profile-form">
+        <div class="dialog-header"><h2 id="profile-dialog-title">Profile</h2><button type="button" data-close-dialog class="btn-close btn-close-white"></button></div>
+        <input type="hidden" id="profile-original-id">
+        <label class="form-label" data-i18n="encyclopedia.id">ID</label><input id="profile-id" class="form-control" pattern="[a-z0-9_]+" required>
+        <div id="profile-language-fields" class="mt-3"></div>
+        <label class="form-label" data-i18n="profiles.stages">Stages</label><textarea id="profile-stages" class="form-control code-input" rows="14" required></textarea>
+        <div class="form-text" data-i18n="profiles.stages_hint">Each stage requires temp, minutes and fan.</div>
+        <div class="dialog-actions mt-3"><button type="button" data-close-dialog class="btn btn-secondary" data-i18n="ui.cancel">Cancel</button><button class="btn btn-success" data-i18n="ui.save">Save</button></div>
+    </form>
+</dialog>
+<script type="module" src="js/management-pages.js"></script>
+</body>
+</html>

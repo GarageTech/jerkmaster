@@ -1,0 +1,18 @@
+{
+  "id": "duck",
+  "profile": "jerky_standard",
+  "dry_mix_usage_per_kg": 6.1,
+  "dry_mix": {
+    "black_pepper": 2,
+    "garlic_powder": 2,
+    "sichuan_pepper": 1,
+    "ginger": 1,
+    "star_anise": 0.1
+  },
+  "marinade": {
+    "curing_salt": 15,
+    "sugar": 5,
+    "soy_sauce": 50,
+    "orange_juice": 50
+  }
+}

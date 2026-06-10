@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+
+*.log
+
+__pycache__/
+
+node_modules/
+
+.vscode/
+
+.idea/
+
+jerkmaster-variables.cfg

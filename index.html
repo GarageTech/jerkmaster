@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="JerkMaster is an open-source smart dehydrator controller powered by Klipper and Moonraker.">
+    <meta property="og:title" content="JerkMaster">
+    <meta property="og:description" content="Open-source programmable dehydrator controller with recipes, drying profiles, telemetry, and diagnostics.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <title>JerkMaster</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet">
+</head>
+
+<body data-bs-theme="dark">
+<main class="container-fluid py-3">
+    <header class="app-header mb-3">
+        <div class="d-flex align-items-center">
+            <img src="img/logo.png" alt="JerkMaster" class="jm-logo me-3">
+        </div>
+
+        <div class="header-actions">
+            <nav class="page-nav" aria-label="Main navigation">
+                <a href="index.html" class="active"><i class="bi bi-speedometer2"></i><span data-i18n="nav.dashboard">Панель</span></a>
+                <a href="ingredients.html"><i class="bi bi-basket2"></i><span data-i18n="nav.ingredients">Ингредиенты</span></a>
+                <a href="recipes.html"><i class="bi bi-journal-richtext"></i><span data-i18n="nav.recipes">Рецепты</span></a>
+                <a href="profiles.html"><i class="bi bi-thermometer-half"></i><span data-i18n="nav.profiles">Профили</span></a>
+                <a href="making-jerky.html"><i class="bi bi-stars"></i><span data-i18n="nav.making_jerky">Приготовление</span></a>
+            </nav>
+            <select class="form-select language-select" data-language-select aria-label="Language">
+                <option value="ru">RU</option><option value="en">EN</option><option value="ua">UA</option>
+            </select>
+            <button id="emergency-stop-btn" class="btn btn-danger">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <span data-i18n="ui.estop">E-STOP</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="card mb-3" aria-label="Статус">
+        <div class="card-body py-2">
+            <div class="status-strip">
+                <span id="dryer-status" class="badge bg-secondary" data-i18n="status.idle">Ожидание</span>
+                <span id="connection-status" class="badge bg-success" data-i18n="status.demo">Демо-режим</span>
+                <div id="diagnostic-statuses" class="diagnostic-statuses" aria-live="polite"></div>
+                <span id="heater-state"><i class="bi bi-fire" aria-hidden="true"></i> Нагреватель выкл.</span>
+                <span id="fan-state"><i class="bi bi-fan" aria-hidden="true"></i> Вентилятор выкл.</span>
+            </div>
+            <div id="alert-container" class="mt-2" aria-live="polite"></div>
+        </div>
+    </section>
+
+    <section class="row g-3 mb-3" aria-label="Текущий процесс">
+                <div class="col-md-4">
+                    <article class="card status-card h-100">
+                        <div class="card-body text-center">
+                            <div class="label" data-i18n="ui.temperature">Температура</div>
+                            <div id="current-temp" class="big-value">25.0°C</div>
+                            <div id="target-temp" class="text-secondary">Цель: 0°C</div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="col-md-4">
+                    <article class="card status-card h-100">
+                        <div class="card-body text-center">
+                            <div class="label" data-i18n="ui.stage">Этап</div>
+                            <div id="current-stage" class="big-value">0 / 0</div>
+                            <div id="stage-name" class="text-secondary">-</div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="col-md-4">
+                    <article class="card status-card h-100">
+                        <div class="card-body text-center">
+                            <div class="label" data-i18n="ui.remaining">Осталось</div>
+                            <div id="remaining-time" class="big-value">00:00</div>
+                            <div id="total-time" class="text-secondary">Всего: 00:00</div>
+                        </div>
+                    </article>
+                </div>
+    </section>
+
+    <section class="card drying-control-panel mb-3">
+        <div class="drying-control-main">
+            <div class="drying-control-title">
+                <span data-i18n="ui.drying_controls">Управление сушкой</span>
+                <small data-i18n="ui.drying_controls_hint">Выберите режим и запустите цикл</small>
+            </div>
+            <div class="drying-control-fields">
+                <div class="compact-field">
+                    <label for="operation-mode" data-i18n="ui.operation_mode">Operation mode</label>
+                    <select id="operation-mode" class="form-select">
+                        <option value="profile" data-i18n="ui.profile_mode">Recipe profile</option>
+                        <option value="custom" data-i18n="ui.custom_mode">Custom</option>
+                    </select>
+                </div>
+                <div class="compact-profile">
+                    <span data-i18n="ui.active_profile">Active profile</span>
+                    <strong id="active-profile">Jerky Standard</strong>
+                </div>
+                <div class="compact-field custom-control d-none">
+                    <label for="custom-temperature" data-i18n="ui.custom_temperature">Temperature (°C)</label>
+                    <input type="number" id="custom-temperature" class="form-control" value="60" min="20" max="85" step="1">
+                </div>
+                <div class="compact-field custom-control d-none">
+                    <label for="custom-duration" data-i18n="ui.custom_duration">Time (minutes)</label>
+                    <input type="number" id="custom-duration" class="form-control" value="240" min="1" step="1">
+                </div>
+            </div>
+            <div class="drying-control-actions">
+                <button id="start-btn" class="btn btn-success">
+                    <i class="bi bi-play-fill" aria-hidden="true"></i>
+                    <span data-i18n="ui.start">Старт</span>
+                </button>
+
+                <button id="stop-btn" class="btn btn-danger d-none" disabled>
+                    <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                    <span data-i18n="ui.stop">Стоп</span>
+                </button>
+            </div>
+        </div>
+        <div class="drying-control-progress">
+            <div class="progress"><div id="progress-bar" class="progress-bar progress-bar-striped" style="width: 0%">0%</div></div>
+        </div>
+    </section>
+
+    <section class="card collapsible-card mb-3" data-collapsible-card>
+        <button class="card-header collapse-toggle" type="button" aria-expanded="true">
+            <span><i class="bi bi-journal-text" aria-hidden="true"></i> <span data-i18n="ui.recipe">Рецепт</span></span>
+            <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="card-body collapsible-content">
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <label class="form-label" for="recipe-select" data-i18n="ui.recipe">Рецепт</label>
+                    <select id="recipe-select" class="form-select"></select>
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label" for="meat-weight" data-i18n="ui.meat_weight_g">Вес мяса (г)</label>
+                    <input type="number" id="meat-weight" class="form-control" value="1000" min="100" step="50">
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label" for="salinity-select" data-i18n="ui.salinity">Соленость</label>
+                    <select id="salinity-select" class="form-select">
+                        <option value="base" data-i18n="ui.salinity_base">По рецепту</option>
+                        <option value="tourist" data-i18n="ui.salinity_tourist">Tourist 1.1%</option>
+                        <option value="beer" data-i18n="ui.salinity_beer">Beer 2.25%</option>
+                    </select>
+                    <div id="salinity-info" class="form-text text-secondary" data-i18n="ui.salinity_hint">
+                        Соль с учетом соевого соуса
+                    </div>
+                    <div class="salinity-result mt-2">
+                        <i class="bi bi-percent" aria-hidden="true"></i>
+                        <span>Расчётная солёность:</span>
+                        <strong id="salinity-percent">0.00%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <article class="card collapsible-card h-100" data-collapsible-card>
+                <button class="card-header collapse-toggle" type="button" aria-expanded="true">
+                    <span><i class="bi bi-basket2" aria-hidden="true"></i> <span data-i18n="ui.spice_mix">Смесь специй</span></span>
+                    <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
+                </button>
+                <div class="card-body collapsible-content">
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label" for="mix-multiplier" data-i18n="ui.mix_multiplier">Множитель смеси</label>
+                            <input type="number" id="mix-multiplier" class="form-control" value="1" min="1" step="0.5" list="mix-multiplier-options">
+                            <datalist id="mix-multiplier-options">
+                                <option value="1"></option>
+                                <option value="2"></option>
+                                <option value="5"></option>
+                                <option value="10"></option>
+                                <option value="20"></option>
+                            </datalist>
+                        </div>
+                        <div class="col-sm-8">
+                            <div id="mix-info" class="form-text text-secondary" data-i18n="ui.mix_multiplier_hint">Размер партии готовой смеси</div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th data-i18n="ui.ingredient">Ингредиент</th>
+                                <th class="text-end" data-i18n="ui.amount">Количество</th>
+                            </tr>
+                            </thead>
+                            <tbody id="dry-mix-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-lg-6">
+            <article class="card collapsible-card h-100" data-collapsible-card>
+                <button class="card-header collapse-toggle" type="button" aria-expanded="true">
+                    <span><i class="bi bi-cup-hot" aria-hidden="true"></i> <span data-i18n="ui.marinade">Маринад</span></span>
+                    <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
+                </button>
+                <div class="card-body collapsible-content">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th data-i18n="ui.ingredient">Ингредиент</th>
+                                <th class="text-end" data-i18n="ui.amount">Количество</th>
+                            </tr>
+                            </thead>
+                            <tbody id="marinade-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="card collapsible-card mb-3" data-collapsible-card>
+        <button class="card-header collapse-toggle" type="button" aria-expanded="true">
+            <span><i class="bi bi-list-check" aria-hidden="true"></i> <span data-i18n="ui.profile">Профиль сушки</span></span>
+            <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="card-body collapsible-content">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th data-i18n="ui.stage">Этап</th>
+                        <th data-i18n="ui.temperature">Температура</th>
+                        <th data-i18n="ui.duration">Время</th>
+                        <th data-i18n="ui.fan">Вентилятор</th>
+                    </tr>
+                    </thead>
+                    <tbody id="profile-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="card collapsible-card mb-3" data-collapsible-card>
+        <button class="card-header collapse-toggle" type="button" aria-expanded="true">
+            <span><i class="bi bi-motherboard" aria-hidden="true"></i> <span data-i18n="ui.controller">Контроллер</span></span>
+            <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="card-body collapsible-content">
+            <div class="hardware-strip">
+                <span><i class="bi bi-cpu" aria-hidden="true"></i> <span id="cpu-temp">CPU 42°C</span></span>
+                <span><i class="bi bi-thermometer-half" aria-hidden="true"></i> <span id="electronics-temp">Bay 35°C</span></span>
+                <span id="heater-ssr-state" class="badge bg-secondary">Нагреватель SSR OFF</span>
+                <span id="fan-ssr-state" class="badge bg-secondary">Вентилятор SSR OFF</span>
+                <span id="firmware-info"><i class="bi bi-hdd-stack" aria-hidden="true"></i> Klipper · SKR 1.4 Turbo</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card collapsible-card mb-3" data-collapsible-card>
+        <button class="card-header collapse-toggle" type="button" aria-expanded="true">
+            <span><i class="bi bi-graph-up" aria-hidden="true"></i> <span data-i18n="ui.temperature_history">Temperature History</span></span>
+            <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="chart-controls px-3 pt-3 collapsible-content">
+            <label><input type="checkbox" id="chart-cpu-toggle"> <span data-i18n="ui.raspberry_pi">Raspberry Pi</span></label>
+            <label><input type="checkbox" id="chart-bay-toggle"> <span data-i18n="ui.electronics_bay">Electronic Bay</span></label>
+        </div>
+        <div class="card-body chart-container collapsible-content">
+            <canvas id="temp-chart" height="120"></canvas>
+        </div>
+    </section>
+
+    <footer class="footer-row text-secondary mt-4 small">
+        <span>JerkMaster v0.1.0</span>
+        <a href="https://github.com/GarageTech/jerkmaster" target="_blank" rel="noopener noreferrer" class="footer-github"><i class="bi bi-github"></i> GarageTech / JerkMaster</a>
+    </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

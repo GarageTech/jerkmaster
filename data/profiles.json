@@ -1,0 +1,37 @@
+{
+  "jerky_standard": {
+    "stages": [
+      {
+        "temp": 35,
+        "minutes": 60,
+        "fan": 100
+      },
+      {
+        "temp": 55,
+        "minutes": 90,
+        "fan": 100
+      },
+      {
+        "temp": 65,
+        "minutes": 180,
+        "fan": 100,
+        "target_weight_loss_percent": 60
+      },
+      {
+        "temp": 75,
+        "minutes": 15,
+        "fan": 100
+      }
+    ]
+  },
+
+  "banana_chips": {
+    "stages": [
+      {
+        "temp": 55,
+        "minutes": 300,
+        "fan": 100
+      }
+    ]
+  }
+}

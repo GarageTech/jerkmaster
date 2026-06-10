@@ -1,0 +1,119 @@
+{
+  "salt": {
+    "category": "salt",
+    "default_unit": "g"
+  },
+  "curing_salt": {
+    "category": "salt",
+    "default_unit": "g"
+  },
+  "sugar": {
+    "category": "sweetener",
+    "default_unit": "g"
+  },
+  "cane_sugar": {
+    "category": "sweetener",
+    "default_unit": "g"
+  },
+  "water": {
+    "category": "liquid",
+    "default_unit": "g"
+  },
+  "soy_sauce": {
+    "category": "liquid",
+    "default_unit": "g"
+  },
+  "orange_juice": {
+    "category": "liquid",
+    "default_unit": "g"
+  },
+  "chili": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "anise": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "star_anise": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "ginger": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "coriander": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "cinnamon": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "nutmeg": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "oregano": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "smoked_paprika": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "sweet_paprika": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "cayenne_pepper": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "sichuan_pepper": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "black_pepper": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "thyme": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "caraway": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "garlic_powder": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "black_fermented_garlic": {
+    "form": "ground",
+    "category": "spice",
+    "default_unit": "g"
+  },
+  "prepared_spice_mix": {
+    "category": "spice",
+    "default_unit": "g"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "pork_classic",
+
+  "profile": "jerky_standard",
+  "dry_mix_usage_per_kg": 15,
+
+  "dry_mix": {
+    "black_pepper": 2.4,
+    "cayenne_pepper": 0.8,
+    "coriander": 2.4,
+    "garlic_powder": 3.9,
+    "ginger": 1.6,
+    "sweet_paprika": 3.9
+  },
+
+  "marinade": {
+    "curing_salt": 22,
+    "soy_sauce": 30,
+    "sugar": 6,
+    "water": 20
+  }
+}

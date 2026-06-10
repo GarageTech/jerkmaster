@@ -1,0 +1,18 @@
+{
+  "id": "beef",
+  "profile": "jerky_standard",
+  "dry_mix_usage_per_kg": 6.5,
+  "dry_mix": {
+    "black_pepper": 1,
+    "garlic_powder": 2,
+    "cayenne_pepper": 1,
+    "coriander": 2,
+    "cinnamon": 0.5
+  },
+  "marinade": {
+    "curing_salt": 22,
+    "cane_sugar": 10,
+    "soy_sauce": 50,
+    "water": 50
+  }
+}
