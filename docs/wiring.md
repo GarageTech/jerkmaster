@@ -7,7 +7,7 @@
 | Heater SSR input | HE0 | `P2.7` |
 | Fan SSR input | FAN0 | `P2.3` |
 | Drying-chamber NTC | TH0 | `P0.24` |
-| Electronics-bay NTC | TH1 | `P0.25` |
+| Electronics-bay NTC | TH1 | `P0.23` |
 | Raspberry Pi temperature | Built-in SoC sensor | `temperature_host` |
 
 These are common reference assignments, not a guarantee for a specific board revision or installation. Verify the BTT SKR 1.4 Turbo schematic, connector labels, and actual wiring before applying power.
