@@ -13,6 +13,10 @@ export class DemoMoonrakerClient {
             mcuConnected: true,
             klipperState: "ready",
             klipperMessage: "",
+            connectionError: "",
+            dryerRunning: null,
+            dryerProfile: "NONE",
+            dryerStage: 0,
             cpuTemp: 42 + Math.sin(elapsed / 9) * 1.5,
             electronicsTemp: 35 + Math.cos(elapsed / 11) * 1.2,
             currentTemp,
@@ -35,6 +39,10 @@ export class MoonrakerClient {
         mcuConnected: false,
         klipperState: "disconnected",
         klipperMessage: "",
+        connectionError: "",
+        dryerRunning: null,
+        dryerProfile: "NONE",
+        dryerStage: 0,
         cpuTemp: 0,
         electronicsTemp: 0,
         currentTemp: 0,
@@ -64,25 +72,35 @@ export class MoonrakerClient {
         ].map(encodeURIComponent).join("&");
 
         try {
-            const response = await fetch(`${this.#baseUrl}/printer/objects/query?${objects}`);
+            const [objectsResponse, serverInfoResponse] = await Promise.all([
+                fetch(`${this.#baseUrl}/printer/objects/query?${objects}`),
+                fetch(`${this.#baseUrl}/server/info`)
+            ]);
 
-            if (!response.ok) {
-                throw new Error(`Moonraker returned HTTP ${response.status}`);
+            if (!objectsResponse.ok || !serverInfoResponse.ok) {
+                throw new Error(`Moonraker returned HTTP ${objectsResponse.ok ? serverInfoResponse.status : objectsResponse.status}`);
             }
 
-            const status = (await response.json()).result.status;
+            const status = (await objectsResponse.json()).result.status;
+            const serverInfo = (await serverInfoResponse.json()).result;
             const heater = status["heater_generic dryer_heater"] ?? {};
             const bay = status["temperature_sensor electronics_bay"] ?? {};
             const cpu = status["temperature_sensor raspberry_pi"] ?? {};
             const fan = status["output_pin dryer_fan"] ?? {};
+            const dryerState = status["gcode_macro DRYER_STATE"] ?? {};
             const webhooks = status.webhooks ?? {};
-            const klipperState = String(webhooks.state ?? "ready");
+            const klipperState = String(serverInfo.klippy_state ?? webhooks.state ?? "disconnected");
+            const klipperConnected = Boolean(serverInfo.klippy_connected) && klipperState === "ready";
 
             this.#telemetry = {
                 connected: true,
-                mcuConnected: klipperState === "ready",
+                mcuConnected: klipperConnected,
                 klipperState,
                 klipperMessage: String(webhooks.state_message ?? ""),
+                connectionError: "",
+                dryerRunning: Number(dryerState.running ?? 0) === 1,
+                dryerProfile: String(dryerState.profile ?? "NONE"),
+                dryerStage: Number(dryerState.stage ?? 0),
                 cpuTemp: Number(cpu.temperature ?? 0),
                 electronicsTemp: Number(bay.temperature ?? 0),
                 currentTemp: Number(heater.temperature ?? 0),
@@ -92,7 +110,13 @@ export class MoonrakerClient {
             };
         } catch (error) {
             console.warn("Moonraker telemetry unavailable:", error);
-            this.#telemetry = { ...this.#telemetry, connected: false, mcuConnected: false, klipperState: "disconnected" };
+            this.#telemetry = {
+                ...this.#telemetry,
+                connected: false,
+                mcuConnected: false,
+                klipperState: "disconnected",
+                connectionError: String(error.message ?? error)
+            };
         }
     }
 

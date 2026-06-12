@@ -23,12 +23,14 @@ export class DryerController extends EventTarget {
         this.#emit();
     }
 
-    start() {
+    start(elapsedSeconds = 0) {
         if (this.state === "running" || !this.profile) {
             return;
         }
 
         this.state = "running";
+        this.elapsedSeconds = Math.max(0, Number(elapsedSeconds) || 0);
+        this.#elapsedBeforePause = this.elapsedSeconds;
         this.#startedAt = Date.now();
         this.#timerId = window.setInterval(() => this.#tick(), 1000);
         this.#tick();

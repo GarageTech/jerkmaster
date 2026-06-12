@@ -15,6 +15,8 @@ const DIAGNOSTIC_LIMITS = {
     minimumHeatingGain: 2
 };
 
+const ACTIVE_DRYING_STORAGE_KEY = "jerkmaster-active-drying";
+
 const els = {
     recipeSelect: document.querySelector("#recipe-select"),
     meatWeight: document.querySelector("#meat-weight"),
@@ -83,7 +85,9 @@ async function init() {
 
     app.t = t;
     app.data = data;
-    app.selectedRecipe = data.recipes[0];
+    const savedDrying = loadActiveDrying();
+    app.selectedRecipe = data.recipes.find((recipe) => recipe.id === savedDrying?.recipeId) ?? data.recipes[0];
+    restoreDryingControls(savedDrying);
     app.dryer = new DryerController(getCurrentProfile());
 
     applyTranslations(document, t);
@@ -93,7 +97,13 @@ async function init() {
     bindEvents();
     initTemperatureChart();
 
-    app.dryer.addEventListener("change", (event) => renderStatus(event.detail));
+    app.dryer.addEventListener("change", (event) => {
+        if (event.detail.state === "complete") clearActiveDrying();
+        renderStatus(event.detail);
+    });
+    if (savedDrying) {
+        app.dryer.start((Date.now() - savedDrying.startedAt) / 1000);
+    }
     renderStatus(app.dryer.getSnapshot());
     window.setInterval(renderTelemetry, 1500);
     renderTelemetry();
@@ -144,14 +154,17 @@ function bindEvents() {
         } else {
             await runMoonrakerCommand(() => app.moonraker.startDrying?.(app.selectedRecipe.profile.toUpperCase()));
         }
+        saveActiveDrying();
         app.dryer.start();
     });
     els.stopBtn.addEventListener("click", async () => {
         await runMoonrakerCommand(() => app.moonraker.stopDrying?.());
+        clearActiveDrying();
         app.dryer.stop();
     });
     els.emergencyStopBtn.addEventListener("click", async () => {
         await runMoonrakerCommand(() => app.moonraker.emergencyStop?.());
+        clearActiveDrying();
         app.dryer.stop("emergency");
     });
 }
@@ -411,7 +424,8 @@ function detectDiagnostics(telemetry, snapshot) {
     const diagnostics = [];
     const now = Date.now();
 
-    if (!telemetry.connected || !telemetry.mcuConnected) diagnostics.push(["danger", "mcu_disconnected"]);
+    if (!telemetry.connected) diagnostics.push(["danger", "moonraker_unavailable", telemetry.connectionError]);
+    else if (!telemetry.mcuConnected) diagnostics.push(["danger", "klipper_not_ready", telemetry.klipperMessage]);
     if (telemetry.connected && [telemetry.currentTemp, telemetry.electronicsTemp, telemetry.cpuTemp].some(isInvalidSensorValue)) diagnostics.push(["danger", "sensor_disconnected"]);
     if (snapshot.state === "emergency" || /emergency|m112/i.test(telemetry.klipperMessage)) diagnostics.push(["danger", "emergency_active"]);
     if (telemetry.cpuTemp >= DIAGNOSTIC_LIMITS.rpiCritical) diagnostics.push(["danger", "rpi_overheating"]);
@@ -437,20 +451,21 @@ function isInvalidSensorValue(value) {
 }
 
 function renderDiagnostics(diagnostics) {
-    els.diagnosticStatuses.replaceChildren(...diagnostics.map(([level, code]) => {
+    els.diagnosticStatuses.replaceChildren(...diagnostics.map(([level, code, detail]) => {
         const status = document.createElement("span");
         status.className = `diagnostic-status ${level}`;
         status.textContent = app.t(`diagnostics.${code}`, code);
+        if (detail) status.title = detail;
         return status;
     }));
 }
 
 function renderAlerts(diagnostics) {
     const alerts = diagnostics.filter(([level]) => level !== "normal");
-    els.alertContainer.replaceChildren(...alerts.map(([level, code]) => {
+    els.alertContainer.replaceChildren(...alerts.map(([level, code, detail]) => {
         const alert = document.createElement("div");
         alert.className = `alert alert-${level}`;
-        alert.textContent = app.t(`diagnostics.${code}`, code);
+        alert.textContent = `${app.t(`diagnostics.${code}`, code)}${detail ? `: ${detail}` : ""}`;
         return alert;
     }));
 }
@@ -472,6 +487,39 @@ function getCurrentProfile() {
     }
 
     return app.data.profiles[app.selectedRecipe.profile];
+}
+
+function saveActiveDrying() {
+    const custom = getCustomSettings();
+    localStorage.setItem(ACTIVE_DRYING_STORAGE_KEY, JSON.stringify({
+        startedAt: Date.now(),
+        mode: isCustomMode() ? "custom" : "profile",
+        recipeId: app.selectedRecipe.id,
+        customTemp: custom.temp,
+        customMinutes: custom.minutes
+    }));
+}
+
+function loadActiveDrying() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(ACTIVE_DRYING_STORAGE_KEY) || "null");
+        return saved && Number.isFinite(saved.startedAt) ? saved : null;
+    } catch {
+        return null;
+    }
+}
+
+function clearActiveDrying() {
+    localStorage.removeItem(ACTIVE_DRYING_STORAGE_KEY);
+}
+
+function restoreDryingControls(saved) {
+    if (!saved) return;
+
+    els.operationMode.value = saved.mode === "custom" ? "custom" : "profile";
+    els.customTemperature.value = saved.customTemp ?? 60;
+    els.customDuration.value = saved.customMinutes ?? 240;
+    els.customControls.forEach((control) => control.classList.toggle("d-none", saved.mode !== "custom"));
 }
 
 function getStageName(index) {

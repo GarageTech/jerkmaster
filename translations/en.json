@@ -53,6 +53,8 @@
   "diagnostics.sensor_disconnected": "Sensor disconnected",
   "diagnostics.ssr_timeout": "SSR timeout",
   "diagnostics.mcu_disconnected": "MCU disconnected",
+  "diagnostics.moonraker_unavailable": "Moonraker unavailable",
+  "diagnostics.klipper_not_ready": "Klipper not ready",
   "diagnostics.emergency_active": "Emergency stop active",
   "diagnostics.rpi_overheating": "RPI overheating",
   "diagnostics.electronic_bay_overheating": "Electronic bay overheating",
