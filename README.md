@@ -94,9 +94,10 @@ Use `?lang=en`, `?lang=ru`, or `?lang=ua` to choose a language.
 1. Read [the installation guide](docs/installation.md).
 2. Review [the hardware list](docs/hardware.md) and [wiring notes](docs/wiring.md).
 3. Copy and adapt the files from `klipper/`.
-4. Verify every pin, sensor type, temperature limit, and electrical protection device.
-5. Test with mains-powered loads physically disconnected.
-6. Connect the UI to Moonraker only after the controller is operating safely.
+4. Run `tools/install-raspberry-pi.sh` on the Raspberry Pi to install and start the UI.
+5. Verify every pin, sensor type, temperature limit, and electrical protection device.
+6. Test with mains-powered loads physically disconnected.
+7. Connect the UI to Moonraker only after the controller is operating safely.
 
 ## Moonraker Connection
 
@@ -109,7 +110,7 @@ http://<current-host>:7125
 An alternate Moonraker URL can be supplied:
 
 ```text
-http://jerkmaster.local/?moonraker=http://192.168.1.50:7125
+http://jerkmaster.local:8080/?moonraker=http://192.168.1.50:7125
 ```
 
 Do not expose Moonraker directly to the public internet. Use a trusted LAN or VPN.
