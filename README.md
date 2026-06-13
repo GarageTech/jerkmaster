@@ -25,6 +25,8 @@ Today jerky is often associated with a snack for beer, but in reality it can be 
 
 JerkMaster was not created as a hardware experiment or simply as another DIY project. It was born from a practical problem.
 
+![JerkMaster dehydrator cutaway blueprint](img/docs/illustrations/jerkmaster-cutaway-blueprint.png)
+
 Over the years I made jerky using several different dehydrators. Some were simple, some were more advanced, but all of them shared the same limitation: they treated drying as a fixed temperature and time process. In practice, good jerky is more nuanced than that.
 
 One of the key ideas behind JerkMaster is staged temperature drying. Instead of immediately exposing the meat to high temperatures, the product is dried gradually. This allows moisture to leave the meat more evenly. When meat is placed directly into a dehydrator running at 65°C, the outer layer can dry too quickly, forming a surface crust while the inside still retains excess moisture. A gradual temperature profile helps achieve a more consistent texture, better moisture distribution, and a more predictable final result.
