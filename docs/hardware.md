@@ -80,6 +80,12 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 
 ![Terminal blocks, ferrules, connectors and crimping tools](../img/docs/illustrations/terminals-wiring-blueprint.webp)
 
+The electrical connection sheet compares fully insulated, partially insulated and non-insulated Faston terminals, male and female contacts, ring and fork terminals, ferrules, wiring protection and the correct crimping tool.
+
+![Screws, nuts, washers and PCB standoffs](../img/docs/illustrations/fasteners-standoffs-blueprint.webp)
+
+The fastener sheet shows the common screw sizes, nuts, washers, PCB spacers and male-female or female-female standoffs used when mounting controller boards and power electronics.
+
 - M2.5/M3 standoffs
 - M2.5/M3/M4 fasteners
 - Fiberglass insulation sleeve d4/6/12 mm
