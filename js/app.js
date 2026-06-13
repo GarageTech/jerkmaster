@@ -40,15 +40,17 @@ const els = {
     activeProfile: document.querySelector("#active-profile"),
     alertContainer: document.querySelector("#alert-container"),
     tempChart: document.querySelector("#temp-chart"),
-    chartCpuToggle: document.querySelector("#chart-cpu-toggle"),
-    chartBayToggle: document.querySelector("#chart-bay-toggle"),
+    chartChamberTemp: document.querySelector("#chart-chamber-temp"),
+    chartTargetTemp: document.querySelector("#chart-target-temp"),
+    chartCpuTemp: document.querySelector("#chart-cpu-temp"),
+    chartBayTemp: document.querySelector("#chart-bay-temp"),
     cpuTemp: document.querySelector("#cpu-temp"),
     electronicsTemp: document.querySelector("#electronics-temp"),
     heaterState: document.querySelector("#heater-state"),
     heaterSsrState: document.querySelector("#heater-ssr-state"),
     fanSsrState: document.querySelector("#fan-ssr-state"),
-    fanState: document.querySelector("#fan-state"),
     fanToggleBtn: document.querySelector("#fan-toggle-btn"),
+    fanToggleLabel: document.querySelector("#fan-toggle-label"),
     operationMode: document.querySelector("#operation-mode"),
     customControls: document.querySelectorAll(".custom-control"),
     customTemperature: document.querySelector("#custom-temperature"),
@@ -148,8 +150,6 @@ function bindEvents() {
     els.meatWeight.addEventListener("input", renderIngredients);
     els.mixMultiplier.addEventListener("input", renderIngredients);
     els.salinitySelect.addEventListener("change", renderIngredients);
-    els.chartCpuToggle.addEventListener("change", () => setDatasetVisibility(2, els.chartCpuToggle.checked));
-    els.chartBayToggle.addEventListener("change", () => setDatasetVisibility(3, els.chartBayToggle.checked));
     els.startBtn.addEventListener("click", async () => {
         if (isCustomMode()) {
             const { temp, minutes } = getCustomSettings();
@@ -347,7 +347,7 @@ function renderTelemetry() {
     els.heaterSsrState.className = `badge ${telemetry.heaterOn ? "bg-success" : "bg-secondary"}`;
     els.fanSsrState.textContent = `${app.t("ui.fan", "Fan")} SSR ${telemetry.fanOn ? "ON" : "OFF"}`;
     els.fanSsrState.className = `badge ${telemetry.fanOn ? "bg-success" : "bg-secondary"}`;
-    els.fanState.innerHTML = `<i class="bi bi-fan" aria-hidden="true"></i> ${app.t("ui.fan", "Fan")} ${app.t(telemetry.fanOn ? "ui.on" : "ui.off", telemetry.fanOn ? "on" : "off")}`;
+    els.fanToggleLabel.textContent = `${app.t("ui.fan", "Fan")} ${app.t(telemetry.fanOn ? "ui.on" : "ui.off", telemetry.fanOn ? "on" : "off")}`;
     els.chamberLightBtn.classList.toggle("is-on", telemetry.lightOn);
     els.chamberLightBtn.setAttribute("aria-pressed", String(telemetry.lightOn));
     els.chamberLightBtn.disabled = !telemetry.connected || !telemetry.mcuConnected;
@@ -356,6 +356,10 @@ function renderTelemetry() {
     els.fanToggleBtn.setAttribute("aria-pressed", String(telemetry.fanOn));
     els.fanToggleBtn.disabled = !telemetry.connected || !telemetry.mcuConnected || snapshot.state === "running";
     els.fanToggleBtn.title = `${app.t("ui.fan", "Fan")} ${app.t(telemetry.fanOn ? "ui.on" : "ui.off", telemetry.fanOn ? "on" : "off")}`;
+    els.chartChamberTemp.textContent = `${telemetry.currentTemp.toFixed(1)}°C`;
+    els.chartTargetTemp.textContent = `${telemetry.targetTemp.toFixed(1)}°C`;
+    els.chartCpuTemp.textContent = `${telemetry.cpuTemp.toFixed(1)}°C`;
+    els.chartBayTemp.textContent = `${telemetry.electronicsTemp.toFixed(1)}°C`;
     const diagnostics = detectDiagnostics(telemetry, snapshot);
     renderAlerts(diagnostics);
     appendTemperaturePoint(telemetry);
@@ -400,24 +404,15 @@ function initTemperatureChart() {
                     tension: 0.25
                 },
                 {
-                    label: app.t("ui.target", "Target"),
-                    data: [],
-                    borderColor: "#f59e0b",
-                    borderDash: [6, 4],
-                    tension: 0.25
-                },
-                {
                     label: "Raspberry Pi",
                     data: [],
                     borderColor: "#a78bfa",
-                    hidden: true,
                     tension: 0.25
                 },
                 {
                     label: app.t("ui.electronics_bay", "Electronic bay"),
                     data: [],
                     borderColor: "#22c55e",
-                    hidden: true,
                     tension: 0.25
                 }
             ]
@@ -444,34 +439,22 @@ function appendTemperaturePoint(telemetry) {
 
     const labels = app.tempChart.data.labels;
     const chamber = app.tempChart.data.datasets[0].data;
-    const target = app.tempChart.data.datasets[1].data;
-    const cpu = app.tempChart.data.datasets[2].data;
-    const bay = app.tempChart.data.datasets[3].data;
+    const cpu = app.tempChart.data.datasets[1].data;
+    const bay = app.tempChart.data.datasets[2].data;
 
     labels.push(new Date().toLocaleTimeString(document.documentElement.lang, { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     chamber.push(telemetry.currentTemp);
-    target.push(telemetry.targetTemp);
     cpu.push(telemetry.cpuTemp);
     bay.push(telemetry.electronicsTemp);
 
     if (labels.length > 20) {
         labels.shift();
         chamber.shift();
-        target.shift();
         cpu.shift();
         bay.shift();
     }
 
     app.tempChart.update("none");
-}
-
-function setDatasetVisibility(index, visible) {
-    if (!app.tempChart) {
-        return;
-    }
-
-    app.tempChart.setDatasetVisibility(index, visible);
-    app.tempChart.update();
 }
 
 function detectDiagnostics(telemetry, snapshot) {

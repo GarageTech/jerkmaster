@@ -115,13 +115,12 @@ export function getSuggestedDryMixMultiplier(recipe) {
 }
 
 export function formatAmount(value, unit) {
-    const rounded = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
     const unitLabel = {
         g: "г",
         ml: "мл"
     }[unit] ?? unit;
 
-    return `${rounded.toLocaleString("ru-RU")} ${unitLabel}`;
+    return `${Number(value).toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${unitLabel}`;
 }
 
 export function formatClock(totalSeconds) {

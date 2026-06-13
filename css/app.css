@@ -149,12 +149,18 @@ button.card-header {
 }
 
 .status-strip {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: .75rem;
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) auto auto minmax(120px, 1fr);
+    gap: clamp(1rem, 4vw, 4rem);
     align-items: center;
-    text-align: center;
+}
+
+.status-strip #dryer-status {
+    justify-self: start;
+}
+
+.status-strip #chamber-light-btn {
+    justify-self: end;
 }
 
 .diagnostic-statuses {
@@ -220,10 +226,6 @@ button.card-header {
 
 #heater-state {
     color: var(--jm-warning);
-}
-
-#fan-state {
-    color: var(--jm-accent);
 }
 
 .hardware-strip {
@@ -461,21 +463,21 @@ button.card-header {
 .chart-controls {
     display: flex;
     flex-wrap: nowrap;
-    justify-content: flex-end;
-    gap: 1.1rem;
+    justify-content: space-between;
+    gap: 1.5rem;
     color: var(--jm-text-muted);
     white-space: nowrap;
 }
 
-.chart-controls label,
 .chart-legend-item {
     display: flex;
     align-items: center;
     gap: .35rem;
 }
 
-.chart-controls label {
-    cursor: pointer;
+.chart-legend-item strong {
+    color: var(--jm-text);
+    font-variant-numeric: tabular-nums;
 }
 
 .chart-legend-item > i {
@@ -486,9 +488,17 @@ button.card-header {
 }
 
 .chart-legend-item.chamber { --legend-color: #38bdf8; }
-.chart-legend-item.target { --legend-color: #f59e0b; }
 .chart-legend-item.cpu { --legend-color: #a78bfa; }
 .chart-legend-item.bay { --legend-color: #22c55e; }
+
+.chart-target-value {
+    margin-left: .35rem;
+    color: var(--jm-warning);
+}
+
+.chart-target-value strong {
+    color: var(--jm-warning);
+}
 
 .ingredient-name {
     display: inline-flex;
@@ -703,18 +713,25 @@ input[type="number"] {
 }
 
 .equipment-toggle {
-    display: inline-grid;
-    width: 38px;
+    display: inline-flex;
+    width: auto;
     height: 38px;
-    flex: 0 0 38px;
-    place-items: center;
-    padding: 0;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    padding: 0 .7rem;
     border: 2px solid var(--jm-warning);
     border-radius: 6px;
     color: var(--jm-warning);
     background: #0b0d10;
-    font-size: 1.15rem;
+    font-size: .9rem;
+    font-weight: 600;
+    white-space: nowrap;
     transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+.equipment-toggle i {
+    font-size: 1.15rem;
 }
 
 .equipment-toggle:disabled {
@@ -795,6 +812,15 @@ input[type="number"] {
     .hardware-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         text-align: left;
+    }
+
+    .status-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+    }
+
+    .status-strip > * {
+        justify-self: stretch !important;
     }
 
     .ingredient-grid,
