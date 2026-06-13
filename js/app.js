@@ -562,14 +562,20 @@ function reconcileActiveDrying(saved, telemetry) {
     const profileId = String(telemetry.dryerProfile || "").toLowerCase();
     const mode = profileId === "custom" ? "custom" : "profile";
     const matchingRecipe = app.data.recipes.find((recipe) => recipe.profile === profileId);
-    const recipeId = saved?.recipeId && (mode === "custom" || app.data.recipes.some((recipe) => recipe.id === saved.recipeId && recipe.profile === profileId))
+    const savedMatchesRunningProcess = Boolean(saved?.recipeId)
+        && (mode === "custom" || app.data.recipes.some((recipe) => recipe.id === saved.recipeId && recipe.profile === profileId));
+    const recipeId = savedMatchesRunningProcess
         ? saved.recipeId
         : matchingRecipe?.id ?? app.data.recipes[0].id;
     const elapsedSeconds = Number.isFinite(telemetry.dryerElapsedSeconds)
         ? telemetry.dryerElapsedSeconds
-        : getElapsedAtStageStart(profileId, telemetry.dryerStage);
+        : savedMatchesRunningProcess && Number.isFinite(saved.startedAt)
+            ? Math.max(0, (Date.now() - saved.startedAt) / 1000)
+            : getElapsedAtStageStart(profileId, telemetry.dryerStage);
     const restored = {
-        startedAt: Date.now() - elapsedSeconds * 1000,
+        startedAt: Number.isFinite(telemetry.dryerElapsedSeconds) || !savedMatchesRunningProcess
+            ? Date.now() - elapsedSeconds * 1000
+            : saved.startedAt,
         elapsedSeconds,
         mode,
         recipeId,
