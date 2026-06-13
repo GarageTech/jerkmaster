@@ -5,6 +5,8 @@
 <p align="center">
   <a href="../README.md">About</a> ·
   <a href="technical-readme.md">Technical overview</a> ·
+  <a href="build-notes.md">Build notes</a> ·
+  <a href="about-recipes.md">Recipes</a> ·
   <a href="installation.md">Installation</a> ·
   <a href="hardware.md">Hardware</a> ·
   <a href="wiring.md">Wiring</a> ·
@@ -16,6 +18,8 @@
 This project did not start with choosing a dehydrator specifically for modification. I originally bought the VEVOR dehydrator for normal use, and only later started modifying it after running into the limitations of the factory controller.
 
 By coincidence, this particular model turned out to be a very good platform for this type of conversion.
+
+![JerkMaster dehydrator cutaway blueprint](../img/docs/illustrations/jerkmaster-cutaway-blueprint.webp)
 
 VEVOR sells several dehydrators in this line, differing in size, power and number of drying trays. However, they appear to share a very similar layout: a stainless steel drying chamber, rear-mounted fan and heater assembly, and a separate electronics bay located at the top of the unit.
 

@@ -8,7 +8,9 @@
 
 <p align="center">
   <a href="../README.md">About</a> ·
+  <a href="technical-readme.md">Technical overview</a> ·
   <a href="build-notes.md">Build notes</a> ·
+  <a href="about-recipes.md">Recipes</a> ·
   <a href="installation.md">Installation</a> ·
   <a href="hardware.md">Hardware</a> ·
   <a href="wiring.md">Wiring</a> ·
@@ -20,6 +22,8 @@
 JerkMaster turns a conventional food dehydrator into a programmable, monitored drying system. It combines a Raspberry Pi, Klipper, Moonraker, a BTT SKR controller, temperature sensors, and SSR-controlled loads with a browser-based control panel.
 
 The project was built around a modified VEVOR dehydrator, but the software and configuration can be adapted to other machines after checking their electrical design, sensors, loads, and safety limits.
+
+![JerkMaster dashboard](../img/docs/screenshots/dashboard.png)
 
 ## Highlights
 
@@ -63,6 +67,27 @@ VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentione
 | JSON files | Default ingredients, recipes, profiles, categories, and translations |
 
 The UI is plain HTML, CSS, and JavaScript. It can be served by any static web server. Default project data remains in the repository; user edits are stored in the browser.
+
+### Software Stack
+
+![Raspberry Pi](https://img.shields.io/badge/Raspberry_Pi-Host-A22846?logo=raspberrypi&logoColor=white)
+![Klipper](https://img.shields.io/badge/Klipper-Motion_and_IO_control-2F3337)
+![Moonraker](https://img.shields.io/badge/Moonraker-HTTP_API-3B82F6)
+![JavaScript](https://img.shields.io/badge/JavaScript-Browser_UI-F7DF1E?logo=javascript&logoColor=111111)
+![HTML5](https://img.shields.io/badge/HTML5-Interface-E34F26?logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS-Styling-663399?logo=css&logoColor=white)
+
+## Interface Tour
+
+The dashboard combines process control, telemetry, diagnostics, recipe scaling, salinity calculations and the active drying profile.
+
+| Ingredient encyclopedia | Recipe management |
+|---|---|
+| ![Ingredient encyclopedia](../img/docs/screenshots/ingredients.png) | ![Recipe management](../img/docs/screenshots/recipes.png) |
+
+| Drying profiles | Making jerky workspace |
+|---|---|
+| ![Drying profiles](../img/docs/screenshots/profiles.png) | ![Making jerky workspace](../img/docs/screenshots/making-jerky.png) |
 
 ## Quick Start
 

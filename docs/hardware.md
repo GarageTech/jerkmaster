@@ -1,6 +1,31 @@
+<p align="center">
+  <img src="../img/logo.png" alt="JerkMaster" width="560">
+</p>
+
+<p align="center">
+  <a href="../README.md">About</a> ·
+  <a href="technical-readme.md">Technical overview</a> ·
+  <a href="build-notes.md">Build notes</a> ·
+  <a href="about-recipes.md">Recipes</a> ·
+  <a href="installation.md">Installation</a> ·
+  <a href="hardware.md">Hardware</a> ·
+  <a href="wiring.md">Wiring</a> ·
+  <a href="../SECURITY.md">Safety</a>
+</p>
+
 # Reference Hardware
 
 The reference JerkMaster build uses the components below. Equivalent parts can be used only after checking electrical compatibility, sensor behavior, power requirements, and safety limits.
+
+## Reference Build Brands
+
+![VEVOR](https://img.shields.io/badge/VEVOR-Dehydrator-FF512B)
+![Raspberry Pi](https://img.shields.io/badge/Raspberry_Pi-Host-A22846?logo=raspberrypi&logoColor=white)
+![BIGTREETECH](https://img.shields.io/badge/BIGTREETECH-SKR_controller-00AEEF)
+![Omron](https://img.shields.io/badge/Omron-SSRs-005BAC)
+![Mean Well](https://img.shields.io/badge/Mean_Well-Power_supplies-00529B)
+![Waveshare](https://img.shields.io/badge/Waveshare-Raspberry_Pi_cooling-1E88E5)
+![Weco](https://img.shields.io/badge/Weco-AC_distribution-2E7D32)
 
 ## Dehydrator
 
@@ -52,6 +77,8 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 - Correctly rated wiring, ferrules, terminals, insulation sleeves, and strain relief
 
 ## Materials Used In The Reference Build
+
+![Terminal blocks, ferrules, connectors and crimping tools](../img/docs/illustrations/terminals-wiring-blueprint.webp)
 
 - M2.5/M3 standoffs
 - M2.5/M3/M4 fasteners

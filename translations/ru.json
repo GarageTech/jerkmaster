@@ -75,6 +75,7 @@
   "ui.start": "Старт",
   "ui.stop": "Стоп",
   "ui.estop": "E-STOP",
+  "ui.light": "Свет",
   "ui.recipe": "Рецепт",
   "ui.profile": "Профиль сушки",
   "ui.ingredient": "Ингредиент",

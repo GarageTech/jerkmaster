@@ -1,3 +1,18 @@
+<p align="center">
+  <img src="../img/logo.png" alt="JerkMaster" width="560">
+</p>
+
+<p align="center">
+  <a href="../README.md">About</a> ·
+  <a href="technical-readme.md">Technical overview</a> ·
+  <a href="build-notes.md">Build notes</a> ·
+  <a href="about-recipes.md">Recipes</a> ·
+  <a href="installation.md">Installation</a> ·
+  <a href="hardware.md">Hardware</a> ·
+  <a href="wiring.md">Wiring</a> ·
+  <a href="../SECURITY.md">Safety</a>
+</p>
+
 # JerkMaster Installation
 
 ## 1. Prepare Klipper
@@ -18,10 +33,11 @@ Perform the first tests with the heater and fan physically disconnected from the
 
 1. At room temperature, both NTC sensors must report plausible and stable values.
 2. Run `SET_PIN PIN=dryer_fan VALUE=1`, then `SET_PIN PIN=dryer_fan VALUE=0`.
-3. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
-4. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
-5. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
-6. Verify the web-interface E-STOP button, which calls Moonraker's `/printer/emergency_stop` endpoint.
+3. Verify HE1 supplies 12 V, then run `SET_PIN PIN=chamber_light VALUE=1` and `SET_PIN PIN=chamber_light VALUE=0`.
+4. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
+5. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
+6. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
+7. Verify the web-interface E-STOP button, which calls Moonraker's `/printer/emergency_stop` endpoint.
 
 Only connect mains-powered loads after these checks and after the installation has been reviewed by a qualified electrician.
 
