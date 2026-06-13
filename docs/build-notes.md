@@ -5,6 +5,8 @@
 <p align="center">
   <a href="../README.md">About</a> ·
   <a href="technical-readme.md">Technical overview</a> ·
+  <a href="build-notes.md">Build notes</a> ·
+  <a href="about-recipes.md">Recipes</a> ·
   <a href="installation.md">Installation</a> ·
   <a href="hardware.md">Hardware</a> ·
   <a href="wiring.md">Wiring</a> ·

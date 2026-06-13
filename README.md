@@ -7,13 +7,14 @@
 </p>
 
 <p align="center">
+  <a href="README.md">About</a> ·
   <a href="docs/technical-readme.md">Technical overview</a> ·
   <a href="docs/build-notes.md">Build notes</a> ·
+  <a href="docs/about-recipes.md">Recipes</a> ·
   <a href="docs/installation.md">Installation</a> ·
   <a href="docs/hardware.md">Hardware</a> ·
   <a href="docs/wiring.md">Wiring</a> ·
-  <a href="SECURITY.md">Safety</a> ·
-  <a href="COMMUNITY_ANNOUNCEMENT.md">Community</a>
+  <a href="SECURITY.md">Safety</a>
 </p>
 
 # About JerkMaster
