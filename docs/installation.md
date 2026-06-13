@@ -117,3 +117,37 @@ http://jerkmaster.local:8080/?demo=1
 ```
 
 Do not expose Moonraker directly to the public internet. Use a trusted LAN or VPN.
+
+## 5. Optional Dual Round Status Displays
+
+The display service is read-only and communicates with Moonraker locally. Wire
+both GC9A01 displays as documented in [Wiring Notes](wiring.md), enable SPI, and
+install the service:
+
+```bash
+sudo raspi-config nonint do_spi 0
+sudo reboot
+
+cd ~/jerkmaster
+chmod +x tools/install-displays.sh
+./tools/install-displays.sh
+```
+
+The default GPIO assignments and Moonraker URL are stored in:
+
+```text
+/opt/jerkmaster-displays/config.json
+```
+
+The displays normally show live drying status. Periodically they switch to a
+two-screen JerkMaster logo and a synchronized animated pair of eyes that looks
+around and blinks. Animation and status durations can be adjusted in the same
+configuration file.
+
+Useful service commands:
+
+```bash
+sudo systemctl status jerkmaster-displays
+sudo systemctl restart jerkmaster-displays
+sudo journalctl -u jerkmaster-displays -f
+```

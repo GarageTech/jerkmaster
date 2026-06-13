@@ -28,6 +28,28 @@
 
 These are common reference assignments, not a guarantee for a specific board revision or installation. Verify the BTT SKR 1.4 Turbo schematic, connector labels, and actual wiring before applying power.
 
+## Optional Dual Round Status Displays
+
+Two Waveshare 1.28-inch GC9A01 displays can share one Raspberry Pi SPI bus.
+They are read-only status displays; they do not control the drying process.
+
+| Display signal | Left display | Right display | Raspberry Pi BCM pin |
+|---|---|---|---|
+| VCC | Shared | Shared | 3.3 V |
+| GND | Shared | Shared | GND |
+| DIN / MOSI | Shared | Shared | GPIO10 |
+| CLK / SCLK | Shared | Shared | GPIO11 |
+| DC | Shared | Shared | GPIO25 |
+| RST | Shared | Shared | GPIO27 |
+| CS | Dedicated | - | GPIO8 / CE0 |
+| CS | - | Dedicated | GPIO7 / CE1 |
+| BL | Dedicated | - | GPIO18 |
+| BL | - | Dedicated | GPIO19 |
+
+The left screen shows chamber temperature, target temperature, heater and fan
+state. The right screen shows stage, circular progress, remaining time, bay
+temperature and Raspberry Pi temperature.
+
 ## Critical Safety Requirements
 
 - Verify the exact SSR model, input voltage, output type, load rating, and heatsink requirements.
