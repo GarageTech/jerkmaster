@@ -217,8 +217,11 @@ function parseAmountMap(text, label) {
 }
 
 function validStage(stage) {
+    const openEndedCooling = Number.isFinite(Number(stage.until_temp_below))
+        && Number(stage.until_temp_below) > 0
+        && Number(stage.minutes) === 0;
     return Number.isFinite(Number(stage.temp)) && Number(stage.temp) >= 20 && Number(stage.temp) <= 85
-        && Number.isFinite(Number(stage.minutes)) && Number(stage.minutes) > 0
+        && Number.isFinite(Number(stage.minutes)) && (Number(stage.minutes) > 0 || openEndedCooling)
         && Number.isFinite(Number(stage.fan)) && Number(stage.fan) >= 0 && Number(stage.fan) <= 100;
 }
 

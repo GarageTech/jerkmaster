@@ -1,4 +1,4 @@
-import { getProfileDurationSeconds, getStageAt } from "./calculator.js";
+import { getProfileDurationSeconds, getStageAt, hasOpenEndedStage } from "./calculator.js";
 
 export class DryerController extends EventTarget {
     #timerId = null;
@@ -56,7 +56,7 @@ export class DryerController extends EventTarget {
 
     getSnapshot() {
         const totalSeconds = getProfileDurationSeconds(this.profile);
-        const elapsedSeconds = Math.min(this.elapsedSeconds, totalSeconds);
+        const elapsedSeconds = hasOpenEndedStage(this.profile) ? this.elapsedSeconds : Math.min(this.elapsedSeconds, totalSeconds);
         const stageInfo = getStageAt(this.profile, elapsedSeconds);
 
         return {
@@ -64,7 +64,7 @@ export class DryerController extends EventTarget {
             elapsedSeconds,
             totalSeconds,
             remainingSeconds: Math.max(0, totalSeconds - elapsedSeconds),
-            progress: totalSeconds > 0 ? Math.round((elapsedSeconds / totalSeconds) * 100) : 0,
+            progress: totalSeconds > 0 ? Math.min(100, Math.round((elapsedSeconds / totalSeconds) * 100)) : 0,
             ...stageInfo
         };
     }
@@ -73,9 +73,11 @@ export class DryerController extends EventTarget {
         const delta = (Date.now() - this.#startedAt) / 1000;
         const totalSeconds = getProfileDurationSeconds(this.profile);
 
-        this.elapsedSeconds = Math.min(this.#elapsedBeforePause + delta, totalSeconds);
+        this.elapsedSeconds = hasOpenEndedStage(this.profile)
+            ? this.#elapsedBeforePause + delta
+            : Math.min(this.#elapsedBeforePause + delta, totalSeconds);
 
-        if (this.elapsedSeconds >= totalSeconds) {
+        if (!hasOpenEndedStage(this.profile) && this.elapsedSeconds >= totalSeconds) {
             this.stop("complete");
             return;
         }

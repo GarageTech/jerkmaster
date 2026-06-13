@@ -299,7 +299,9 @@ function renderStatus(snapshot) {
     els.dryerStatus.className = `badge ${snapshot.state === "running" ? "bg-success" : snapshot.state === "emergency" ? "bg-danger" : "bg-secondary"}`;
     els.currentStage.textContent = `${snapshot.index + 1} / ${getCurrentProfile().stages.length}`;
     els.stageName.textContent = getStageName(snapshot.index);
-    els.targetTemp.textContent = `${app.t("ui.target", "Target")}: ${currentStage.temp}°C`;
+    els.targetTemp.textContent = currentStage.until_temp_below != null
+        ? `${app.t("ui.cooling_until", "Cooling until")} ${currentStage.until_temp_below}°C`
+        : `${app.t("ui.target", "Target")}: ${currentStage.temp}°C`;
     els.remainingTime.textContent = formatClock(snapshot.remainingSeconds);
     els.totalTime.textContent = `${app.t("ui.total", "Total")}: ${formatClock(getProfileDurationSeconds(getCurrentProfile()))}`;
     els.progressBar.style.width = `${snapshot.progress}%`;
@@ -641,6 +643,10 @@ function renderActiveProfile() {
 }
 
 function formatStageDurationLocalized(stage) {
+    if (stage.until_temp_below != null) {
+        return `${app.t("ui.until_temperature", "until temperature")} ≤${stage.until_temp_below}°C`;
+    }
+
     const hours = Math.floor(stage.minutes / 60);
     const minutes = stage.minutes % 60;
     const parts = [];

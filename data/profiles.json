@@ -13,7 +13,7 @@
       },
       {
         "temp": 65,
-        "minutes": 180,
+        "minutes": 210,
         "fan": 100,
         "target_weight_loss_percent": 60
       },
@@ -21,6 +21,12 @@
         "temp": 75,
         "minutes": 15,
         "fan": 100
+      },
+      {
+        "temp": 30,
+        "minutes": 0,
+        "fan": 100,
+        "until_temp_below": 30
       }
     ]
   },

@@ -29,7 +29,7 @@ MUTED = "#94a3b8"
 RESAMPLE_LANCZOS = getattr(Image, "Resampling", Image).LANCZOS
 
 PROFILE_STAGES = {
-    "JERKY_STANDARD": [60, 90, 180, 15],
+    "JERKY_STANDARD": [60, 90, 210, 15],
     "BANANA_CHIPS": [300],
 }
 
@@ -265,7 +265,7 @@ def render_process(telemetry):
         draw.arc((8, 8, 232, 232), -90, end_angle, fill=CYAN, width=9)
     centered(draw, (120, 36), telemetry.profile.replace("_", " "), FONTS["small"], MUTED)
     centered(draw, (120, 72), f"STAGE {telemetry.stage or '-'}", FONTS["medium"])
-    centered(draw, (120, 116), format_duration(remaining), FONTS["medium"], CYAN)
+    centered(draw, (120, 116), "COOLING" if telemetry.stage == 5 else format_duration(remaining), FONTS["medium"], CYAN)
     centered(draw, (120, 148), f"{progress * 100:.0f}%", FONTS["label"], MUTED)
     draw.line((43, 170, 197, 170), fill=TRACK, width=3)
     centered(draw, (75, 190), "BAY", FONTS["small"], MUTED)

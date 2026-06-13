@@ -138,7 +138,7 @@ export function formatClock(totalSeconds) {
 }
 
 export function getProfileDurationSeconds(profile) {
-    return profile.stages.reduce((sum, stage) => sum + stage.minutes * 60, 0);
+    return profile.stages.reduce((sum, stage) => sum + Math.max(0, Number(stage.minutes) || 0) * 60, 0);
 }
 
 export function getStageAt(profile, elapsedSeconds) {
@@ -146,7 +146,16 @@ export function getStageAt(profile, elapsedSeconds) {
 
     for (let index = 0; index < profile.stages.length; index += 1) {
         const stage = profile.stages[index];
-        const duration = stage.minutes * 60;
+        const duration = Math.max(0, Number(stage.minutes) || 0) * 60;
+
+        if (stage.until_temp_below != null && elapsedSeconds >= cursor) {
+            return {
+                index,
+                stage,
+                elapsedInStage: elapsedSeconds - cursor,
+                remainingInStage: null
+            };
+        }
 
         if (elapsedSeconds < cursor + duration) {
             return {
@@ -168,4 +177,8 @@ export function getStageAt(profile, elapsedSeconds) {
         elapsedInStage: profile.stages[lastIndex]?.minutes * 60 ?? 0,
         remainingInStage: 0
     };
+}
+
+export function hasOpenEndedStage(profile) {
+    return profile.stages.some((stage) => stage.until_temp_below != null);
 }
