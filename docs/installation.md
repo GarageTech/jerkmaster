@@ -100,6 +100,8 @@ exact origin to the `[authorization]` section of the active
 [authorization]
 cors_domains:
   http://jerkmaster.local:8080
+  http://jerkmaster.home:8080
+  http://192.0.2.24:8080
 ```
 
 Keep any existing `cors_domains` entries, then restart Moonraker:
