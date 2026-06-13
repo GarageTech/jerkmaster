@@ -18,6 +18,9 @@ export class DemoMoonrakerClient {
             dryerRunning: null,
             dryerProfile: "NONE",
             dryerStage: 0,
+            dryerElapsedSeconds: null,
+            dryerCustomTemp: 0,
+            dryerCustomMinutes: 0,
             cpuTemp: 42 + Math.sin(elapsed / 9) * 1.5,
             electronicsTemp: 35 + Math.cos(elapsed / 11) * 1.2,
             currentTemp,
@@ -50,6 +53,9 @@ export class MoonrakerClient {
         dryerRunning: null,
         dryerProfile: "NONE",
         dryerStage: 0,
+        dryerElapsedSeconds: null,
+        dryerCustomTemp: 0,
+        dryerCustomMinutes: 0,
         cpuTemp: 0,
         electronicsTemp: 0,
         currentTemp: 0,
@@ -77,6 +83,7 @@ export class MoonrakerClient {
             "output_pin dryer_fan",
             "output_pin chamber_light",
             "gcode_macro DRYER_STATE",
+            "toolhead",
             "webhooks"
         ].map(encodeURIComponent).join("&");
 
@@ -98,6 +105,7 @@ export class MoonrakerClient {
             const fan = status["output_pin dryer_fan"] ?? {};
             const light = status["output_pin chamber_light"] ?? {};
             const dryerState = status["gcode_macro DRYER_STATE"] ?? {};
+            const toolhead = status.toolhead ?? {};
             const webhooks = status.webhooks ?? {};
             const klipperState = String(serverInfo.klippy_state ?? webhooks.state ?? "disconnected");
             const klipperConnected = Boolean(serverInfo.klippy_connected) && klipperState === "ready";
@@ -111,6 +119,9 @@ export class MoonrakerClient {
                 dryerRunning: Number(dryerState.running ?? 0) === 1,
                 dryerProfile: String(dryerState.profile ?? "NONE"),
                 dryerStage: Number(dryerState.stage ?? 0),
+                dryerElapsedSeconds: getDryerElapsedSeconds(dryerState, toolhead),
+                dryerCustomTemp: Number(dryerState.custom_temp ?? 0),
+                dryerCustomMinutes: Number(dryerState.custom_minutes ?? 0),
                 cpuTemp: Number(cpu.temperature ?? 0),
                 electronicsTemp: Number(bay.temperature ?? 0),
                 currentTemp: Number(heater.temperature ?? 0),
@@ -183,4 +194,16 @@ export function createMoonrakerClient() {
 
 function getDefaultMoonrakerUrl() {
     return `${window.location.protocol}//${window.location.hostname}:7125`;
+}
+
+function getDryerElapsedSeconds(dryerState, toolhead) {
+    const stageStartedAt = Number(dryerState.stage_started_at);
+    const elapsedBeforeStage = Number(dryerState.elapsed_before_stage);
+    const estimatedPrintTime = Number(toolhead.estimated_print_time);
+
+    if (![stageStartedAt, elapsedBeforeStage, estimatedPrintTime].every(Number.isFinite) || stageStartedAt <= 0) {
+        return null;
+    }
+
+    return Math.max(0, elapsedBeforeStage + estimatedPrintTime - stageStartedAt);
 }

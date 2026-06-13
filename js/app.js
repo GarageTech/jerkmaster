@@ -87,7 +87,8 @@ async function init() {
 
     app.t = t;
     app.data = data;
-    const savedDrying = loadActiveDrying();
+    await app.moonraker.refreshTelemetry?.();
+    const savedDrying = reconcileActiveDrying(loadActiveDrying(), app.moonraker.getTelemetry());
     app.selectedRecipe = data.recipes.find((recipe) => recipe.id === savedDrying?.recipeId) ?? data.recipes[0];
     restoreDryingControls(savedDrying);
     app.dryer = new DryerController(getCurrentProfile());
@@ -104,7 +105,7 @@ async function init() {
         renderStatus(event.detail);
     });
     if (savedDrying) {
-        app.dryer.start((Date.now() - savedDrying.startedAt) / 1000);
+        app.dryer.start(savedDrying.elapsedSeconds ?? (Date.now() - savedDrying.startedAt) / 1000);
     }
     renderStatus(app.dryer.getSnapshot());
     window.setInterval(renderTelemetry, 1500);
@@ -319,11 +320,12 @@ function renderTelemetry() {
         return;
     }
 
-    const snapshot = app.dryer.getSnapshot();
     const telemetry = app.moonraker.getTelemetry({
-        running: snapshot.state === "running",
-        targetTemp: snapshot.stage.temp
+        running: app.dryer.getSnapshot().state === "running",
+        targetTemp: app.dryer.getSnapshot().stage.temp
     });
+    syncDryerWithTelemetry(telemetry);
+    const snapshot = app.dryer.getSnapshot();
 
     els.connectionStatus.textContent = telemetry.connected ? (app.moonraker.isDemo ? app.t("status.demo", "Демо-режим") : "Moonraker") : "Offline";
     els.cpuTemp.textContent = `CPU ${telemetry.cpuTemp.toFixed(0)}°C`;
@@ -343,6 +345,26 @@ function renderTelemetry() {
     renderDiagnostics(diagnostics);
     renderAlerts(diagnostics);
     appendTemperaturePoint(telemetry);
+}
+
+function syncDryerWithTelemetry(telemetry) {
+    if (!telemetry.connected || telemetry.dryerRunning === null) {
+        return;
+    }
+
+    const snapshot = app.dryer.getSnapshot();
+    if (telemetry.dryerRunning && snapshot.state !== "running") {
+        const restored = reconcileActiveDrying(loadActiveDrying(), telemetry);
+        app.selectedRecipe = app.data.recipes.find((recipe) => recipe.id === restored.recipeId) ?? app.data.recipes[0];
+        restoreDryingControls(restored);
+        app.dryer.setProfile(getCurrentProfile());
+        renderRecipeOptions();
+        renderRecipe();
+        app.dryer.start(restored.elapsedSeconds);
+    } else if (!telemetry.dryerRunning && snapshot.state === "running") {
+        clearActiveDrying();
+        app.dryer.stop("stopped");
+    }
 }
 
 function initTemperatureChart() {
@@ -525,6 +547,44 @@ function loadActiveDrying() {
     } catch {
         return null;
     }
+}
+
+function reconcileActiveDrying(saved, telemetry) {
+    if (telemetry.dryerRunning === null || !telemetry.connected) {
+        return saved;
+    }
+
+    if (!telemetry.dryerRunning) {
+        clearActiveDrying();
+        return null;
+    }
+
+    const profileId = String(telemetry.dryerProfile || "").toLowerCase();
+    const mode = profileId === "custom" ? "custom" : "profile";
+    const matchingRecipe = app.data.recipes.find((recipe) => recipe.profile === profileId);
+    const recipeId = saved?.recipeId && (mode === "custom" || app.data.recipes.some((recipe) => recipe.id === saved.recipeId && recipe.profile === profileId))
+        ? saved.recipeId
+        : matchingRecipe?.id ?? app.data.recipes[0].id;
+    const elapsedSeconds = Number.isFinite(telemetry.dryerElapsedSeconds)
+        ? telemetry.dryerElapsedSeconds
+        : getElapsedAtStageStart(profileId, telemetry.dryerStage);
+    const restored = {
+        startedAt: Date.now() - elapsedSeconds * 1000,
+        elapsedSeconds,
+        mode,
+        recipeId,
+        customTemp: telemetry.dryerCustomTemp || saved?.customTemp || 60,
+        customMinutes: telemetry.dryerCustomMinutes || saved?.customMinutes || 240
+    };
+
+    localStorage.setItem(ACTIVE_DRYING_STORAGE_KEY, JSON.stringify(restored));
+    return restored;
+}
+
+function getElapsedAtStageStart(profileId, stageNumber) {
+    const stages = app.data.profiles[profileId]?.stages ?? [];
+    return stages.slice(0, Math.max(0, Number(stageNumber) - 1))
+        .reduce((seconds, stage) => seconds + Number(stage.minutes) * 60, 0);
 }
 
 function clearActiveDrying() {
