@@ -33,10 +33,6 @@
                 <a href="profiles.html"><i class="bi bi-thermometer-half"></i><span data-i18n="nav.profiles">Профили</span></a>
                 <a href="making-jerky.html"><i class="bi bi-stars"></i><span data-i18n="nav.making_jerky">Приготовление</span></a>
             </nav>
-            <button id="chamber-light-btn" class="btn btn-outline-warning" type="button" aria-pressed="false">
-                <i class="bi bi-lightbulb" aria-hidden="true"></i>
-                <span id="chamber-light-label" data-i18n="ui.light">Свет</span>
-            </button>
             <select class="form-select language-select" data-language-select aria-label="Language">
                 <option value="ru">RU</option><option value="en">EN</option><option value="ua">UA</option>
             </select>
@@ -51,12 +47,18 @@
         <div class="card-body py-2">
             <div class="status-strip">
                 <span id="dryer-status" class="badge bg-secondary" data-i18n="status.idle">Ожидание</span>
-                <span id="connection-status" class="badge bg-success" data-i18n="status.demo">Демо-режим</span>
-                <div id="diagnostic-statuses" class="diagnostic-statuses" aria-live="polite"></div>
                 <span id="heater-state"><i class="bi bi-fire" aria-hidden="true"></i> Нагреватель выкл.</span>
                 <span id="fan-state"><i class="bi bi-fan" aria-hidden="true"></i> Вентилятор выкл.</span>
+                <button id="fan-toggle-btn" class="equipment-toggle fan-toggle" type="button" aria-pressed="false" title="Вентилятор">
+                    <i class="bi bi-fan" aria-hidden="true"></i>
+                    <span class="visually-hidden" data-i18n="ui.fan">Вентилятор</span>
+                </button>
+                <button id="chamber-light-btn" class="equipment-toggle light-toggle" type="button" aria-pressed="false" title="Свет">
+                    <i class="bi bi-lightbulb-fill" aria-hidden="true"></i>
+                    <span id="chamber-light-label" class="visually-hidden" data-i18n="ui.light">Свет</span>
+                </button>
             </div>
-            <div id="alert-container" class="mt-2" aria-live="polite"></div>
+            <div id="alert-container" class="mt-2 error-strip" aria-live="polite"></div>
         </div>
     </section>
 
@@ -268,6 +270,7 @@
                 <span><i class="bi bi-thermometer-half" aria-hidden="true"></i> <span id="electronics-temp">Bay 35°C</span></span>
                 <span id="heater-ssr-state" class="badge bg-secondary">Нагреватель SSR OFF</span>
                 <span id="fan-ssr-state" class="badge bg-secondary">Вентилятор SSR OFF</span>
+                <span id="connection-status" class="badge bg-success" data-i18n="status.demo">Демо-режим</span>
                 <span id="firmware-info"><i class="bi bi-hdd-stack" aria-hidden="true"></i> Klipper · SKR 1.4 Turbo</span>
             </div>
         </div>
@@ -279,8 +282,10 @@
             <i class="bi bi-chevron-up collapse-chevron" aria-hidden="true"></i>
         </button>
         <div class="chart-controls px-3 pt-3 collapsible-content">
-            <label><input type="checkbox" id="chart-cpu-toggle"> <span data-i18n="ui.raspberry_pi">Raspberry Pi</span></label>
-            <label><input type="checkbox" id="chart-bay-toggle"> <span data-i18n="ui.electronics_bay">Electronic Bay</span></label>
+            <span class="chart-legend-item chamber"><i></i><span data-i18n="ui.chamber">Камера</span></span>
+            <span class="chart-legend-item target"><i></i><span data-i18n="ui.target">Цель</span></span>
+            <label class="chart-legend-item cpu"><input type="checkbox" id="chart-cpu-toggle"><i></i><span data-i18n="ui.raspberry_pi">Raspberry Pi</span></label>
+            <label class="chart-legend-item bay"><input type="checkbox" id="chart-bay-toggle"><i></i><span data-i18n="ui.electronics_bay">Electronic Bay</span></label>
         </div>
         <div class="card-body chart-container collapsible-content">
             <canvas id="temp-chart" height="120"></canvas>

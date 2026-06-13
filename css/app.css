@@ -149,8 +149,9 @@ button.card-header {
 }
 
 .status-strip {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(max-content, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: .75rem;
     align-items: center;
     text-align: center;
@@ -212,13 +213,6 @@ button.card-header {
     color: var(--jm-success);
 }
 
-#connection-status {
-    min-width: 112px;
-    background-color: #16351f !important;
-    color: #9ff0b3;
-    border: 1px solid rgba(34, 197, 94, .35);
-}
-
 #dryer-status {
     min-width: 100px;
     font-size: .9rem;
@@ -234,7 +228,7 @@ button.card-header {
 
 .hardware-strip {
     display: grid;
-    grid-template-columns: repeat(5, minmax(max-content, 1fr));
+    grid-template-columns: repeat(6, minmax(max-content, 1fr));
     gap: 1rem;
     align-items: center;
     text-align: center;
@@ -461,22 +455,40 @@ button.card-header {
 
 .chart-container {
     position: relative;
-    min-height: 260px;
+    min-height: 330px;
 }
 
 .chart-controls {
     display: flex;
+    flex-wrap: nowrap;
     justify-content: flex-end;
-    gap: 1rem;
+    gap: 1.1rem;
     color: var(--jm-text-muted);
+    white-space: nowrap;
 }
 
-.chart-controls label {
+.chart-controls label,
+.chart-legend-item {
     display: flex;
     align-items: center;
     gap: .35rem;
+}
+
+.chart-controls label {
     cursor: pointer;
 }
+
+.chart-legend-item > i {
+    width: 1.6rem;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--legend-color);
+}
+
+.chart-legend-item.chamber { --legend-color: #38bdf8; }
+.chart-legend-item.target { --legend-color: #f59e0b; }
+.chart-legend-item.cpu { --legend-color: #a78bfa; }
+.chart-legend-item.bay { --legend-color: #22c55e; }
 
 .ingredient-name {
     display: inline-flex;
@@ -609,20 +621,21 @@ input[type="number"] {
     display: grid;
     min-width: 140px;
     align-content: center;
-    padding: .35rem .6rem;
-    border: 1px solid var(--jm-border);
+    padding: .35rem .7rem;
+    border: 1px solid #0284c7;
     border-radius: 6px;
-    background: #111418;
+    background: #075985;
 }
 
 .compact-profile span {
-    color: var(--jm-text-muted);
-    font-size: .68rem;
+    color: #bae6fd;
+    font-size: .72rem;
 }
 
 .compact-profile strong {
     overflow: hidden;
-    font-size: .82rem;
+    color: #fff;
+    font-size: .95rem;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -697,16 +710,53 @@ input[type="number"] {
     font-weight: 700;
 }
 
-#chamber-light-btn {
-    min-width: 110px;
-    white-space: nowrap;
+.equipment-toggle {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    padding: 0;
+    border: 2px solid var(--jm-warning);
+    border-radius: 6px;
+    color: var(--jm-warning);
+    background: #0b0d10;
+    font-size: 1.15rem;
+    transition: color .15s ease, background .15s ease, box-shadow .15s ease;
 }
 
-#chamber-light-btn.is-on {
+.equipment-toggle:disabled {
+    cursor: not-allowed;
+    opacity: .4;
+}
+
+.equipment-toggle.is-on {
     color: #111827;
     background: var(--jm-warning);
     border-color: var(--jm-warning);
     box-shadow: 0 0 14px rgba(245, 158, 11, .35);
+}
+
+.fan-toggle {
+    color: var(--jm-accent);
+    border-color: var(--jm-accent);
+}
+
+.fan-toggle.is-on {
+    color: #07131d;
+    background: var(--jm-accent);
+    border-color: var(--jm-accent);
+    box-shadow: 0 0 14px rgba(56, 189, 248, .35);
+}
+
+.error-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.error-strip .alert {
+    flex: 1 1 280px;
 }
 
 ::-webkit-scrollbar {
@@ -750,7 +800,6 @@ input[type="number"] {
         flex: 1;
     }
 
-    .status-strip,
     .hardware-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         text-align: left;
@@ -787,9 +836,13 @@ input[type="number"] {
         flex: 1;
     }
 
-    .status-strip,
     .hardware-strip {
         grid-template-columns: 1fr;
+    }
+
+    .chart-controls {
+        justify-content: flex-start;
+        overflow-x: auto;
     }
 
     #emergency-stop-btn {

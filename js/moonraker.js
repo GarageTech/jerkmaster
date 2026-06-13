@@ -2,6 +2,7 @@ export class DemoMoonrakerClient {
     isDemo = true;
     #baseStartedAt = Date.now();
     #lightOn = false;
+    #fanOn = false;
 
     getTelemetry({ running = false, targetTemp = 0 } = {}) {
         const elapsed = (Date.now() - this.#baseStartedAt) / 1000;
@@ -26,7 +27,7 @@ export class DemoMoonrakerClient {
             currentTemp,
             targetTemp,
             heaterOn: running && currentTemp < targetTemp - 0.5,
-            fanOn: running,
+            fanOn: running || this.#fanOn,
             lightOn: this.#lightOn
         };
     }
@@ -37,6 +38,11 @@ export class DemoMoonrakerClient {
 
     setChamberLight(on) {
         this.#lightOn = Boolean(on);
+        return Promise.resolve();
+    }
+
+    setDryerFan(on) {
+        this.#fanOn = Boolean(on);
         return Promise.resolve();
     }
 }
@@ -168,6 +174,11 @@ export class MoonrakerClient {
 
     setChamberLight(on) {
         return this.runGcode(`SET_PIN PIN=chamber_light VALUE=${on ? 1 : 0}`)
+            .then(() => this.refreshTelemetry());
+    }
+
+    setDryerFan(on) {
+        return this.runGcode(`SET_PIN PIN=dryer_fan VALUE=${on ? 1 : 0}`)
             .then(() => this.refreshTelemetry());
     }
 

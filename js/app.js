@@ -37,7 +37,6 @@ const els = {
     progressBar: document.querySelector("#progress-bar"),
     dryerStatus: document.querySelector("#dryer-status"),
     connectionStatus: document.querySelector("#connection-status"),
-    diagnosticStatuses: document.querySelector("#diagnostic-statuses"),
     activeProfile: document.querySelector("#active-profile"),
     alertContainer: document.querySelector("#alert-container"),
     tempChart: document.querySelector("#temp-chart"),
@@ -49,6 +48,7 @@ const els = {
     heaterSsrState: document.querySelector("#heater-ssr-state"),
     fanSsrState: document.querySelector("#fan-ssr-state"),
     fanState: document.querySelector("#fan-state"),
+    fanToggleBtn: document.querySelector("#fan-toggle-btn"),
     operationMode: document.querySelector("#operation-mode"),
     customControls: document.querySelectorAll(".custom-control"),
     customTemperature: document.querySelector("#custom-temperature"),
@@ -175,6 +175,15 @@ function bindEvents() {
             await runMoonrakerCommand(() => app.moonraker.setChamberLight?.(!telemetry.lightOn));
         } finally {
             els.chamberLightBtn.disabled = false;
+        }
+    });
+    els.fanToggleBtn.addEventListener("click", async () => {
+        const telemetry = app.moonraker.getTelemetry();
+        els.fanToggleBtn.disabled = true;
+        try {
+            await runMoonrakerCommand(() => app.moonraker.setDryerFan?.(!telemetry.fanOn));
+        } finally {
+            els.fanToggleBtn.disabled = app.dryer.getSnapshot().state === "running";
         }
     });
     els.emergencyStopBtn.addEventListener("click", async () => {
@@ -343,8 +352,11 @@ function renderTelemetry() {
     els.chamberLightBtn.setAttribute("aria-pressed", String(telemetry.lightOn));
     els.chamberLightBtn.disabled = !telemetry.connected || !telemetry.mcuConnected;
     els.chamberLightLabel.textContent = `${app.t("ui.light", "Light")} ${app.t(telemetry.lightOn ? "ui.on" : "ui.off", telemetry.lightOn ? "on" : "off")}`;
+    els.fanToggleBtn.classList.toggle("is-on", telemetry.fanOn);
+    els.fanToggleBtn.setAttribute("aria-pressed", String(telemetry.fanOn));
+    els.fanToggleBtn.disabled = !telemetry.connected || !telemetry.mcuConnected || snapshot.state === "running";
+    els.fanToggleBtn.title = `${app.t("ui.fan", "Fan")} ${app.t(telemetry.fanOn ? "ui.on" : "ui.off", telemetry.fanOn ? "on" : "off")}`;
     const diagnostics = detectDiagnostics(telemetry, snapshot);
-    renderDiagnostics(diagnostics);
     renderAlerts(diagnostics);
     appendTemperaturePoint(telemetry);
 }
@@ -419,7 +431,7 @@ function initTemperatureChart() {
                 y: { ticks: { color: "#9ca3af" }, grid: { color: "#252a31" }, suggestedMin: 20, suggestedMax: 80 }
             },
             plugins: {
-                legend: { labels: { color: "#e5e7eb" } }
+                legend: { display: false }
             }
         }
     });
@@ -442,7 +454,7 @@ function appendTemperaturePoint(telemetry) {
     cpu.push(telemetry.cpuTemp);
     bay.push(telemetry.electronicsTemp);
 
-    if (labels.length > 60) {
+    if (labels.length > 20) {
         labels.shift();
         chamber.shift();
         target.shift();
@@ -485,26 +497,15 @@ function detectDiagnostics(telemetry, snapshot) {
         app.heaterWatch = null;
     }
 
-    return diagnostics.length ? diagnostics : [["normal", "normal_work"]];
+    return diagnostics;
 }
 
 function isInvalidSensorValue(value) {
     return !Number.isFinite(value) || value <= 0;
 }
 
-function renderDiagnostics(diagnostics) {
-    els.diagnosticStatuses.replaceChildren(...diagnostics.map(([level, code, detail]) => {
-        const status = document.createElement("span");
-        status.className = `diagnostic-status ${level}`;
-        status.textContent = app.t(`diagnostics.${code}`, code);
-        if (detail) status.title = detail;
-        return status;
-    }));
-}
-
 function renderAlerts(diagnostics) {
-    const alerts = diagnostics.filter(([level]) => level !== "normal");
-    els.alertContainer.replaceChildren(...alerts.map(([level, code, detail]) => {
+    els.alertContainer.replaceChildren(...diagnostics.map(([level, code, detail]) => {
         const alert = document.createElement("div");
         alert.className = `alert alert-${level}`;
         alert.textContent = `${app.t(`diagnostics.${code}`, code)}${detail ? `: ${detail}` : ""}`;
