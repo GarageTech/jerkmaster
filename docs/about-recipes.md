@@ -21,6 +21,8 @@ Many commercial dehydrators provide recipe books that consist of little more tha
 
 The recipes and drying profiles included with JerkMaster are based on a real-world jerky-making workflow that has been refined through practical use. They are not theoretical examples. They are recipes that are regularly used to produce jerky on a weekly basis and are expected to deliver the same predictable result every time.
 
+![JerkMaster recipe management](../img/docs/screenshots/recipes.png)
+
 The recipe base and preparation methodology used by this project were developed by the author of the Dobroslav13 channel:
 
 [youtube.com/@dobroslav13](https://www.youtube.com/@dobroslav13)

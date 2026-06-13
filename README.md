@@ -39,6 +39,9 @@ What started as a simple controller replacement gradually evolved into a complet
 
 I am not a professional software developer. The idea, recipes, drying methodology, hardware design, testing, assembly and overall vision are mine. The software itself became possible thanks to modern AI tools. Much of the JavaScript code, configuration logic and user interface were created with the assistance of AI, transforming ideas and requirements into working software. Without tools such as Codex and modern language models, JerkMaster would likely have remained a collection of spreadsheets, notes and unfinished prototypes.
 
+![Codex](https://img.shields.io/badge/Codex-AI_assisted_development-111111?logo=openai&logoColor=white)
+![GitHub](https://img.shields.io/badge/GitHub-Open_source-181717?logo=github&logoColor=white)
+
 JerkMaster is therefore not only a dehydrator controller. It is an experiment in combining traditional food preservation, open-source hardware, 3D printing technologies and AI-assisted software development into a single practical tool.
 
 The goal is simple: when a recipe turns out exceptionally well, it should be possible to reproduce it months later with the same ingredients, the same drying profile and the same result.
@@ -46,3 +49,5 @@ The goal is simple: when a recipe turns out exceptionally well, it should be pos
 ---
 
 Technical details, installation steps, architecture, commands, and safety information are available in the [technical overview](docs/technical-readme.md).
+
+![JerkMaster dashboard](img/docs/screenshots/dashboard.png)
