@@ -1,3 +1,18 @@
+<p align="center">
+  <img src="../img/logo.png" alt="JerkMaster" width="560">
+</p>
+
+<p align="center">
+  <a href="../README.md">About</a> ·
+  <a href="technical-readme.md">Technical overview</a> ·
+  <a href="build-notes.md">Build notes</a> ·
+  <a href="about-recipes.md">Recipes</a> ·
+  <a href="installation.md">Installation</a> ·
+  <a href="hardware.md">Hardware</a> ·
+  <a href="wiring.md">Wiring</a> ·
+  <a href="../SECURITY.md">Safety</a>
+</p>
+
 # Reference Hardware
 
 The reference JerkMaster build uses the components below. Equivalent parts can be used only after checking electrical compatibility, sensor behavior, power requirements, and safety limits.
