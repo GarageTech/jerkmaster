@@ -618,23 +618,15 @@ input[type="number"] {
 }
 
 .compact-profile {
-    display: grid;
+    display: flex;
     min-width: 140px;
-    align-content: center;
-    padding: .35rem .7rem;
-    border: 1px solid #0284c7;
-    border-radius: 6px;
-    background: #075985;
-}
-
-.compact-profile span {
-    color: #bae6fd;
-    font-size: .72rem;
+    align-items: center;
+    padding: .35rem 0;
 }
 
 .compact-profile strong {
     overflow: hidden;
-    color: #fff;
+    color: var(--jm-accent);
     font-size: .95rem;
     text-overflow: ellipsis;
     white-space: nowrap;
