@@ -90,6 +90,7 @@
   "ui.salinity_tourist": "Tourist 1.1%",
   "ui.salinity_beer": "Beer 2.25%",
   "ui.salinity_hint": "Соль с учетом соевого соуса",
+  "ui.calculated_salinity": "Расчётная солёность:",
   "ui.stage": "Этап",
   "ui.temperature": "Температура",
   "ui.duration": "Время",

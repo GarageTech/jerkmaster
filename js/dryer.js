@@ -28,12 +28,36 @@ export class DryerController extends EventTarget {
             return;
         }
 
+        this.#startTimer(elapsedSeconds);
+    }
+
+    restore(profile, elapsedSeconds = 0) {
+        if (this.#timerId) {
+            window.clearInterval(this.#timerId);
+            this.#timerId = null;
+        }
+
+        this.profile = profile;
+        this.#startTimer(elapsedSeconds);
+    }
+
+    #startTimer(elapsedSeconds) {
         this.state = "running";
         this.elapsedSeconds = Math.max(0, Number(elapsedSeconds) || 0);
         this.#elapsedBeforePause = this.elapsedSeconds;
         this.#startedAt = Date.now();
         this.#timerId = window.setInterval(() => this.#tick(), 1000);
         this.#tick();
+    }
+
+    syncElapsed(elapsedSeconds) {
+        if (this.state !== "running" || !Number.isFinite(Number(elapsedSeconds))) {
+            return;
+        }
+
+        this.elapsedSeconds = Math.max(0, Number(elapsedSeconds));
+        this.#elapsedBeforePause = this.elapsedSeconds;
+        this.#startedAt = Date.now();
     }
 
     stop(state = "stopped") {

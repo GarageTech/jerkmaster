@@ -61,6 +61,7 @@
   "diagnostics.electronic_bay_overheating": "Electronic bay overheating",
   "ui.active_profile": "Active profile",
   "ui.salinity_hint": "Salt including soy sauce",
+  "ui.calculated_salinity": "Calculated salinity:",
   "ui.minutes": "min",
   "ui.hours": "h",
   "ui.until_weight_loss": "or until",

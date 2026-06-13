@@ -12,7 +12,8 @@
 
 - [ ] Validate every JSON file
 - [ ] Check JavaScript syntax
-- [ ] Open all five pages through HTTP
+- [ ] Install the current repository version on the Raspberry Pi
+- [ ] Open all five pages from the Raspberry-hosted service
 - [ ] Test demo mode
 - [ ] Test EN, RU, and UA
 - [ ] Verify ingredient, recipe, and profile CRUD

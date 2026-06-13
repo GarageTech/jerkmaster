@@ -36,6 +36,7 @@ for directory in css data img js recipes translations; do
     rm -rf -- "${INSTALL_DIR:?}/${directory}"
     cp -a -- "${PROJECT_DIR}/${directory}" "${INSTALL_DIR}/${directory}"
 done
+install -m 0755 "${PROJECT_DIR}/tools/raspberry-server.py" "${INSTALL_DIR}/raspberry-server.py"
 
 cat >"${SERVICE_FILE}" <<EOF
 [Unit]
@@ -46,7 +47,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=${INSTALL_DIR}
-ExecStart=/usr/bin/python3 -m http.server ${PORT} --bind 0.0.0.0 --directory ${INSTALL_DIR}
+ExecStart=/usr/bin/python3 ${INSTALL_DIR}/raspberry-server.py --port ${PORT} --directory ${INSTALL_DIR}
 Restart=on-failure
 RestartSec=3
 DynamicUser=yes
@@ -60,7 +61,8 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable --now jerkmaster.service
+systemctl enable jerkmaster.service
+systemctl restart jerkmaster.service
 
 HOSTNAME="$(hostname)"
 echo
@@ -69,3 +71,4 @@ echo "  http://${HOSTNAME}.local:${PORT}/"
 echo "  http://$(hostname -I | awk '{print $1}'):${PORT}/"
 echo
 echo "Service status: systemctl status jerkmaster"
+echo "Health check:   curl -fsS http://127.0.0.1:${PORT}/health"

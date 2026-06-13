@@ -1,3 +1,2 @@
 ; Starts the built-in non-blocking jerky profile.
-START_DRYING PROFILE=JERKY_STANDARD
-
+START_DRYING PROFILE=JERKY_STANDARD RECIPE=pork_classic

@@ -61,6 +61,7 @@
   "diagnostics.rpi_overheating": "Перегрів RPI",
   "diagnostics.electronic_bay_overheating": "Перегрів електровідсіку",
   "ui.salinity_hint": "Сіль з урахуванням соєвого соусу",
+  "ui.calculated_salinity": "Розрахункова солоність:",
   "ui.minutes": "хв",
   "ui.hours": "год",
   "ui.until_weight_loss": "або до усушки",

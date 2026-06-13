@@ -154,7 +154,29 @@ the same commit.
 
 ## Unreleased
 
+### Changed
+
+- Made Klipper `DRYER_STATE` the only authoritative source for real drying-state restoration.
+- Added the active recipe and final result to `DRYER_STATE` so browser reopening restores the exact running process without browser-side guesses.
+- Synchronized the dashboard timer to Klipper elapsed time on every telemetry update.
+- Made the deployable web service Raspberry-only and removed alternate Moonraker URL support.
+- Replaced the generic Python static server with a Raspberry service that disables browser caching and exposes `/health`.
+- Localized ingredient amount numbers and units for English, Russian, and Ukrainian.
+
+### Fixed
+
+- Prevented completed or stopped drying processes from being restored from stale browser storage.
+- Fixed Russian `г` and Russian number formatting appearing in the English ingredient tables.
+- Added the missing translation for the calculated-salinity label.
+
+### Removed
+
+- Removed browser-local active drying state, the local-computer development server, and temporary preview files.
+- Removed duplicate chamber-light controls from secondary pages and their separate Moonraker client logic.
+- Removed unused Klipper state variables, `save_variables`, and ambiguous `START`, `STOP`, and `ESTOP` aliases.
+
 ### Documentation
 
 - Reconstructed the complete project changelog in chronological commit order with links to all existing commits.
 - Added contributor and agent rules requiring `CHANGELOG.md` updates with future project changes.
+- Reworked installation and technical documentation around a single Raspberry Pi deployment.

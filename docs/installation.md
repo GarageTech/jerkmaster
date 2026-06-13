@@ -15,21 +15,100 @@
 
 # JerkMaster Installation
 
-## 1. Prepare Klipper
+JerkMaster is designed to run entirely on the Raspberry Pi that hosts Klipper and
+Moonraker. Do not run a second JerkMaster server on another computer. Browsers on
+the local network open the Raspberry-hosted interface.
+
+## 1. Install MainsailOS And Klipper
 
 1. Install MainsailOS on the Raspberry Pi.
-2. Build Klipper firmware for the `LPC1769` used by the BTT SKR 1.4 Turbo, then flash the board.
-3. Copy the contents of `klipper/` to `~/printer_data/config/`.
-4. Run `ls /dev/serial/by-id/*` and place the correct result in the `[mcu]` section of `printer.cfg`.
-5. Verify and adapt every pin in `hardware.cfg`.
-6. Copy examples from `klipper/gcodes/` to `~/printer_data/gcodes/`.
-7. Merge the required sections from `klipper/moonraker.conf` into the active Moonraker configuration.
-8. Restart Moonraker with `sudo systemctl restart moonraker`.
-9. Run `RESTART` and inspect the Klipper log.
+2. Build Klipper firmware for the `LPC1769` used by the BTT SKR 1.4 Turbo and flash the board.
+3. Clone or copy this repository to `~/jerkmaster` on the Raspberry Pi.
+4. Copy the contents of `~/jerkmaster/klipper/` to `~/printer_data/config/`.
+5. Run `ls /dev/serial/by-id/*` and place the correct result in the `[mcu]` section of `printer.cfg`.
+6. Verify and adapt every pin, sensor type, temperature limit, and safety setting in `hardware.cfg`.
+7. Copy examples from `klipper/gcodes/` to `~/printer_data/gcodes/`.
+8. Merge the required sections from `klipper/moonraker.conf` into the active Moonraker configuration.
+9. Restart Moonraker with `sudo systemctl restart moonraker`.
+10. Run `RESTART` in the Klipper console and inspect `~/printer_data/logs/klippy.log`.
 
-## 2. Test Before Connecting Mains Loads
+## 2. Install Or Update The Web Interface
 
-Perform the first tests with the heater and fan physically disconnected from the SSR outputs.
+Run the installer from the repository on the Raspberry Pi:
+
+```bash
+cd ~/jerkmaster
+chmod +x tools/install-raspberry-pi.sh
+sudo ./tools/install-raspberry-pi.sh
+```
+
+The installer copies the interface to `/opt/jerkmaster`, installs
+`jerkmaster.service`, and starts it automatically at boot. Run the same command
+after every repository update. The Raspberry-only web service disables browser
+caching so interface changes appear immediately after an update.
+
+For an existing installation, update the repository and the active drying macros
+before reinstalling the interface:
+
+```bash
+cd ~/jerkmaster
+git pull --ff-only
+cp klipper/macros.cfg ~/printer_data/config/macros.cfg
+sudo ./tools/install-raspberry-pi.sh
+```
+
+Review changes to `printer.cfg`, `hardware.cfg`, and `moonraker.conf` before
+copying or merging them, because these files contain machine-specific serial,
+pin, and network settings. Run `RESTART` after updating Klipper configuration.
+
+Open the interface using the Raspberry Pi hostname:
+
+```text
+http://jerkmaster.local:8080/
+```
+
+The interface always connects to Moonraker on port `7125` of the same Raspberry Pi
+hostname. There is no alternate remote-Moonraker URL.
+
+Useful commands:
+
+```bash
+sudo systemctl status jerkmaster
+sudo systemctl restart jerkmaster
+sudo journalctl -u jerkmaster -f
+curl -fsS http://127.0.0.1:8080/health
+```
+
+If `jerkmaster.local` does not resolve, verify the Raspberry Pi hostname with
+`hostname`, ensure mDNS/Avahi is running, or use the Pi IP address. When using an
+IP address, add the exact interface origin, for example
+`http://192.0.2.24:8080`, to Moonraker's active `cors_domains` and restart
+Moonraker.
+
+Demo mode remains available from the Raspberry-hosted interface:
+
+```text
+http://jerkmaster.local:8080/?demo=1
+```
+
+## 3. State Restoration
+
+Klipper's `DRYER_STATE` macro is the only authoritative source for an active
+drying process. It stores the running flag, recipe, profile, stage, custom
+settings, and elapsed time.
+
+After closing or reopening a browser:
+
+- if Klipper reports `running=1`, the dashboard restores that exact process;
+- if Klipper reports `running=0`, the dashboard remains stopped and does not
+  restore stale browser state;
+- if Moonraker is temporarily unavailable, the dashboard waits for Klipper
+  instead of guessing whether a process is active.
+
+## 4. Test Before Connecting Mains Loads
+
+Perform the first tests with the heater and fan physically disconnected from the
+SSR outputs.
 
 1. At room temperature, both NTC sensors must report plausible and stable values.
 2. Run `SET_PIN PIN=dryer_fan VALUE=1`, then `SET_PIN PIN=dryer_fan VALUE=0`.
@@ -37,88 +116,24 @@ Perform the first tests with the heater and fan physically disconnected from the
 4. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
 5. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
 6. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
-7. Verify the web-interface E-STOP button, which calls Moonraker's `/printer/emergency_stop` endpoint.
+7. Verify the web-interface E-STOP button.
 
-Only connect mains-powered loads after these checks and after the installation has been reviewed by a qualified electrician.
+Only connect mains-powered loads after these checks and after the installation
+has been reviewed by a qualified electrician.
 
-## 3. Commands
+## 5. Commands
 
 ```gcode
-START_DRYING PROFILE=JERKY_STANDARD
-START_DRYING PROFILE=BANANA_CHIPS
-START_DRYING PROFILE=CUSTOM TEMP=60 MINUTES=240
+START_DRYING PROFILE=JERKY_STANDARD RECIPE=pork_classic
+START_DRYING PROFILE=BANANA_CHIPS RECIPE=banana_chips
+START_DRYING PROFILE=CUSTOM TEMP=60 MINUTES=240 RECIPE=pork_classic
 STOP_DRYING
 DRYER_ESTOP
 ```
 
 After `DRYER_ESTOP`, run `FIRMWARE_RESTART`.
 
-## 4. Web Interface And Moonraker
-
-### Run JerkMaster On The Raspberry Pi
-
-Clone or copy the complete JerkMaster repository to the Raspberry Pi, then run:
-
-```bash
-cd ~/jerkmaster
-chmod +x tools/install-raspberry-pi.sh
-./tools/install-raspberry-pi.sh
-```
-
-The installer copies the web interface to `/opt/jerkmaster`, installs the
-`jerkmaster.service` system service, and starts it automatically on every boot.
-Open the interface from another computer or phone on the same network:
-
-```text
-http://<raspberry-pi-hostname>.local:8080/
-```
-
-To update the installed interface, pull or copy a newer repository version and
-run `./tools/install-raspberry-pi.sh` again.
-
-Useful service commands:
-
-```bash
-sudo systemctl status jerkmaster
-sudo systemctl restart jerkmaster
-sudo journalctl -u jerkmaster -f
-```
-
-The interface connects to Moonraker on port `7125` of the current hostname by default.
-
-An alternate URL can be provided:
-
-```text
-http://jerkmaster.local:8080/?moonraker=http://192.0.2.50:7125
-```
-
-If the interface reports `Moonraker unavailable: Failed to fetch`, add its
-exact origin to the `[authorization]` section of the active
-`~/printer_data/config/moonraker.conf`:
-
-```ini
-[authorization]
-cors_domains:
-  http://jerkmaster.local:8080
-  http://jerkmaster.home:8080
-  http://192.0.2.24:8080
-```
-
-Keep any existing `cors_domains` entries, then restart Moonraker:
-
-```bash
-sudo systemctl restart moonraker
-```
-
-Demo mode:
-
-```text
-http://jerkmaster.local:8080/?demo=1
-```
-
-Do not expose Moonraker directly to the public internet. Use a trusted LAN or VPN.
-
-## 5. Optional Dual Round Status Displays
+## 6. Optional Dual Round Status Displays
 
 The display service is read-only and communicates with Moonraker locally. Wire
 both GC9A01 displays as documented in [Wiring Notes](wiring.md), enable SPI, and
@@ -130,24 +145,11 @@ sudo reboot
 
 cd ~/jerkmaster
 chmod +x tools/install-displays.sh
-./tools/install-displays.sh
+sudo ./tools/install-displays.sh
 ```
 
-The default GPIO assignments and Moonraker URL are stored in:
+The default GPIO assignments and Moonraker URL are stored in
+`/opt/jerkmaster-displays/config.json`.
 
-```text
-/opt/jerkmaster-displays/config.json
-```
-
-The displays normally show live drying status. Periodically they switch to a
-two-screen JerkMaster logo and a synchronized animated pair of eyes that looks
-around and blinks. Animation and status durations can be adjusted in the same
-configuration file.
-
-Useful service commands:
-
-```bash
-sudo systemctl status jerkmaster-displays
-sudo systemctl restart jerkmaster-displays
-sudo journalctl -u jerkmaster-displays -f
-```
+Do not expose JerkMaster or Moonraker directly to the public internet. Use a
+trusted LAN or VPN.

@@ -18,6 +18,8 @@ export class DemoMoonrakerClient {
             connectionError: "",
             dryerRunning: null,
             dryerProfile: "NONE",
+            dryerRecipe: "NONE",
+            dryerResult: "NONE",
             dryerStage: 0,
             dryerElapsedSeconds: null,
             dryerCustomTemp: 0,
@@ -58,6 +60,8 @@ export class MoonrakerClient {
         connectionError: "",
         dryerRunning: null,
         dryerProfile: "NONE",
+        dryerRecipe: "NONE",
+        dryerResult: "NONE",
         dryerStage: 0,
         dryerElapsedSeconds: null,
         dryerCustomTemp: 0,
@@ -73,7 +77,6 @@ export class MoonrakerClient {
 
     constructor(baseUrl = getDefaultMoonrakerUrl()) {
         this.#baseUrl = baseUrl.replace(/\/+$/, "");
-        this.refreshTelemetry();
         window.setInterval(() => this.refreshTelemetry(), 1500);
     }
 
@@ -124,6 +127,8 @@ export class MoonrakerClient {
                 connectionError: "",
                 dryerRunning: Number(dryerState.running ?? 0) === 1,
                 dryerProfile: String(dryerState.profile ?? "NONE"),
+                dryerRecipe: String(dryerState.recipe ?? "NONE"),
+                dryerResult: String(dryerState.last_result ?? "NONE"),
                 dryerStage: Number(dryerState.stage ?? 0),
                 dryerElapsedSeconds: getDryerElapsedSeconds(dryerState, toolhead),
                 dryerCustomTemp: Number(dryerState.custom_temp ?? 0),
@@ -160,12 +165,12 @@ export class MoonrakerClient {
         return response.json();
     }
 
-    startDrying(profile) {
-        return this.runGcode(`START_DRYING PROFILE=${profile}`);
+    startDrying(profile, recipeId) {
+        return this.runGcode(`START_DRYING PROFILE=${profile} RECIPE=${recipeId}`);
     }
 
-    startCustomDrying(temp, minutes) {
-        return this.runGcode(`START_DRYING PROFILE=CUSTOM TEMP=${temp} MINUTES=${minutes}`);
+    startCustomDrying(temp, minutes, recipeId) {
+        return this.runGcode(`START_DRYING PROFILE=CUSTOM TEMP=${temp} MINUTES=${minutes} RECIPE=${recipeId}`);
     }
 
     stopDrying() {
@@ -200,7 +205,7 @@ export function createMoonrakerClient() {
         return new DemoMoonrakerClient();
     }
 
-    return new MoonrakerClient(params.get("moonraker") || getDefaultMoonrakerUrl());
+    return new MoonrakerClient(getDefaultMoonrakerUrl());
 }
 
 function getDefaultMoonrakerUrl() {

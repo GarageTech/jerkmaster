@@ -27,7 +27,7 @@ export function setupLanguageSelectors() {
     document.documentElement.lang = locale;
     document.querySelectorAll(".page-nav a").forEach((link) => {
         const url = new URL(link.href, window.location.href);
-        ["lang", "demo", "moonraker"].forEach((key) => {
+        ["lang", "demo"].forEach((key) => {
             if (currentParams.has(key)) {
                 url.searchParams.set(key, currentParams.get(key));
             }

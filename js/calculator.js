@@ -114,13 +114,15 @@ export function getSuggestedDryMixMultiplier(recipe) {
     return smallestAmount < 1 ? Math.ceil(1 / smallestAmount) : 1;
 }
 
-export function formatAmount(value, unit) {
+export function formatAmount(value, unit, locale = "en") {
+    const numberLocale = { en: "en-US", ru: "ru-RU", ua: "uk-UA" }[locale] ?? "en-US";
     const unitLabel = {
-        g: "г",
-        ml: "мл"
-    }[unit] ?? unit;
+        en: { g: "g", ml: "ml" },
+        ru: { g: "г", ml: "мл" },
+        ua: { g: "г", ml: "мл" }
+    }[locale]?.[unit] ?? unit;
 
-    return `${Number(value).toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${unitLabel}`;
+    return `${Number(value).toLocaleString(numberLocale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${unitLabel}`;
 }
 
 export function formatClock(totalSeconds) {

@@ -63,10 +63,15 @@ VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentione
 | Browser UI | Dashboard, calculators, CRUD editors, translations, telemetry, diagnostics |
 | Moonraker | HTTP API between the browser and Klipper |
 | Klipper | Heater/fan control, sensors, safety limits, and non-blocking drying macros |
-| Local storage | User-created and edited ingredients, recipes, profiles, and active drying state |
+| Klipper `DRYER_STATE` | Authoritative active recipe, profile, stage, settings, and elapsed time |
+| Browser local storage | User-created and edited ingredients, recipes, profiles, and language preference |
 | JSON files | Default ingredients, recipes, profiles, categories, and translations |
 
-The UI is plain HTML, CSS, and JavaScript. It can be served by any static web server. Default project data remains in the repository; user edits are stored in the browser.
+The UI is plain HTML, CSS, and JavaScript served on the Raspberry Pi by
+`jerkmaster.service`. The service disables browser caching and exposes `/health`
+for installation checks. Default project data remains in the repository; user
+edits are stored in the browser. Active drying state is never restored from
+browser storage; Klipper is the only source of truth.
 
 ### Software Stack
 
@@ -93,16 +98,10 @@ The dashboard combines process control, telemetry, diagnostics, recipe scaling, 
 
 ### Interface Demo
 
-Start the included development server:
-
-```powershell
-node tools/dev-server.mjs
-```
-
-Then open:
+After installing JerkMaster on the Raspberry Pi, open:
 
 ```text
-http://127.0.0.1:8080/?demo=1
+http://jerkmaster.local:8080/?demo=1
 ```
 
 Use `?lang=en`, `?lang=ru`, or `?lang=ua` to choose a language.
@@ -125,20 +124,17 @@ By default, the UI connects to port `7125` on the same hostname:
 http://<current-host>:7125
 ```
 
-An alternate Moonraker URL can be supplied:
-
-```text
-http://jerkmaster.local:8080/?moonraker=http://192.0.2.50:7125
-```
+The interface intentionally does not support an alternate Moonraker URL. The web
+interface and Moonraker run on the same Raspberry Pi.
 
 Do not expose Moonraker directly to the public internet. Use a trusted LAN or VPN.
 
 ## Klipper Commands
 
 ```gcode
-START_DRYING PROFILE=JERKY_STANDARD
-START_DRYING PROFILE=BANANA_CHIPS
-START_DRYING PROFILE=CUSTOM TEMP=60 MINUTES=240
+START_DRYING PROFILE=JERKY_STANDARD RECIPE=pork_classic
+START_DRYING PROFILE=BANANA_CHIPS RECIPE=banana_chips
+START_DRYING PROFILE=CUSTOM TEMP=60 MINUTES=240 RECIPE=pork_classic
 STOP_DRYING
 DRYER_ESTOP
 ```
@@ -167,7 +163,7 @@ js/            UI, storage, calculation, telemetry, and diagnostics
 klipper/       Klipper, Moonraker, macros, and example G-code
 recipes/       Default recipe data
 translations/  EN, RU, and UA dictionaries
-tools/         Local development server and Raspberry Pi installer
+tools/         Raspberry Pi web-interface and display installers
 ```
 
 ## Contributing

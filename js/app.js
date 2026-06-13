@@ -1,5 +1,6 @@
 import { calculateDryMix, calculateMarinade, clampMeatWeight, clampMixMultiplier, formatAmount, formatClock, getDryMixBatchSummary, getProfileDurationSeconds, getSalinitySummary, getSuggestedDryMixMultiplier } from "./calculator.js";
 import { DryerController } from "./dryer.js";
+import { getDryingProcessKey, resolveActiveDrying } from "./drying-state.js";
 import { createMoonrakerClient } from "./moonraker.js";
 import { loadRecipeData } from "./recipes.js";
 import { getIngredientName } from "./ingredient-store.js";
@@ -14,8 +15,6 @@ const DIAGNOSTIC_LIMITS = {
     ssrTimeoutMs: 180000,
     minimumHeatingGain: 2
 };
-
-const ACTIVE_DRYING_STORAGE_KEY = "jerkmaster-active-drying";
 
 const els = {
     recipeSelect: document.querySelector("#recipe-select"),
@@ -70,14 +69,16 @@ const app = {
     moonraker: createMoonrakerClient(),
     tempChart: null,
     locale: getPreferredLocale(),
-    heaterWatch: null
+    heaterWatch: null,
+    activeProcessKey: null,
+    activeProfileId: null
 };
 
 init().catch((error) => {
     console.error(error);
     document.body.insertAdjacentHTML(
         "afterbegin",
-        `<div class="alert alert-danger m-3">Не удалось загрузить данные приложения. Запустите проект через локальный HTTP-сервер.</div>`
+        `<div class="alert alert-danger m-3">Failed to load JerkMaster data. Verify the Raspberry Pi service.</div>`
     );
 });
 
@@ -89,10 +90,12 @@ async function init() {
 
     app.t = t;
     app.data = data;
+    localStorage.removeItem("jerkmaster-active-drying");
     await app.moonraker.refreshTelemetry?.();
-    const savedDrying = reconcileActiveDrying(loadActiveDrying(), app.moonraker.getTelemetry());
-    app.selectedRecipe = data.recipes.find((recipe) => recipe.id === savedDrying?.recipeId) ?? data.recipes[0];
-    restoreDryingControls(savedDrying);
+    const activeDrying = resolveActiveDrying(app.moonraker.getTelemetry(), app.data);
+    app.selectedRecipe = data.recipes.find((recipe) => recipe.id === activeDrying?.recipeId) ?? data.recipes[0];
+    app.activeProfileId = activeDrying?.profileId ?? null;
+    restoreDryingControls(activeDrying);
     app.dryer = new DryerController(getCurrentProfile());
 
     applyTranslations(document, t);
@@ -103,11 +106,11 @@ async function init() {
     initTemperatureChart();
 
     app.dryer.addEventListener("change", (event) => {
-        if (event.detail.state === "complete") clearActiveDrying();
         renderStatus(event.detail);
     });
-    if (savedDrying) {
-        app.dryer.start(savedDrying.elapsedSeconds ?? (Date.now() - savedDrying.startedAt) / 1000);
+    if (activeDrying) {
+        app.activeProcessKey = getDryingProcessKey(activeDrying);
+        app.dryer.start(activeDrying.elapsedSeconds);
     }
     renderStatus(app.dryer.getSnapshot());
     window.setInterval(renderTelemetry, 1500);
@@ -153,17 +156,25 @@ function bindEvents() {
     els.startBtn.addEventListener("click", async () => {
         if (isCustomMode()) {
             const { temp, minutes } = getCustomSettings();
-            await runMoonrakerCommand(() => app.moonraker.startCustomDrying?.(temp, minutes));
+            await runMoonrakerCommand(() => app.moonraker.startCustomDrying?.(temp, minutes, app.selectedRecipe.id));
         } else {
-            await runMoonrakerCommand(() => app.moonraker.startDrying?.(app.selectedRecipe.profile.toUpperCase()));
+            await runMoonrakerCommand(() => app.moonraker.startDrying?.(app.selectedRecipe.profile.toUpperCase(), app.selectedRecipe.id));
         }
-        saveActiveDrying();
-        app.dryer.start();
+        if (app.moonraker.isDemo) {
+            app.dryer.start();
+        } else {
+            await app.moonraker.refreshTelemetry?.();
+            syncDryerWithTelemetry(app.moonraker.getTelemetry());
+        }
     });
     els.stopBtn.addEventListener("click", async () => {
         await runMoonrakerCommand(() => app.moonraker.stopDrying?.());
-        clearActiveDrying();
-        app.dryer.stop();
+        if (app.moonraker.isDemo) {
+            app.dryer.stop();
+        } else {
+            await app.moonraker.refreshTelemetry?.();
+            syncDryerWithTelemetry(app.moonraker.getTelemetry());
+        }
     });
     els.chamberLightBtn.addEventListener("click", async () => {
         const telemetry = app.moonraker.getTelemetry({
@@ -188,7 +199,7 @@ function bindEvents() {
     });
     els.emergencyStopBtn.addEventListener("click", async () => {
         await runMoonrakerCommand(() => app.moonraker.emergencyStop?.());
-        clearActiveDrying();
+        app.activeProcessKey = null;
         app.dryer.stop("emergency");
     });
 }
@@ -234,7 +245,7 @@ function renderIngredientRows(tableBody, rows) {
             const categoryInfo = app.data.categories[category] ?? {};
             name.innerHTML = `<span class="ingredient-name"><span class="category-icon" style="--category-color:${categoryInfo.color ?? "#6c757d"}">${categoryInfo.icon ?? "•"}</span><span></span></span>`;
             name.querySelector(".ingredient-name span:last-child").textContent = getIngredientName(app.data.ingredients[id], app.locale, app.t(`ingredients.${id}`, id));
-            value.textContent = formatAmount(amount, unit);
+            value.textContent = formatAmount(amount, unit, app.locale);
             value.className = "text-end";
             row.append(name, value);
 
@@ -249,16 +260,16 @@ function renderDryMixSummary(mixMultiplier) {
     const doseRow = document.createElement("tr");
 
     totalRow.className = "summary-row";
-    totalRow.innerHTML = `<td>${app.t("ui.mix_batch_total", "Mix batch total")}</td><td class="text-end">${formatAmount(summary.batchTotal, "g")}</td>`;
+    totalRow.innerHTML = `<td>${app.t("ui.mix_batch_total", "Mix batch total")}</td><td class="text-end">${formatAmount(summary.batchTotal, "g", app.locale)}</td>`;
 
     doseRow.className = "summary-row";
-    doseRow.innerHTML = `<td>${app.t("ui.mix_per_kg", "For marinade per 1 kg of meat")}</td><td class="text-end">${formatAmount(summary.usagePerKg, "g")}</td>`;
+    doseRow.innerHTML = `<td>${app.t("ui.mix_per_kg", "For marinade per 1 kg of meat")}</td><td class="text-end">${formatAmount(summary.usagePerKg, "g", app.locale)}</td>`;
 
     els.dryMixTable.append(totalRow, doseRow);
     els.mixInfo.textContent = app.t("ui.mix_summary", "Batch x{multiplier}: {total}. For marinade: {usage} per 1 kg")
         .replace("{multiplier}", summary.multiplier)
-        .replace("{total}", formatAmount(summary.batchTotal, "g"))
-        .replace("{usage}", formatAmount(summary.usagePerKg, "g"));
+        .replace("{total}", formatAmount(summary.batchTotal, "g", app.locale))
+        .replace("{usage}", formatAmount(summary.usagePerKg, "g", app.locale));
 }
 
 function renderProfile() {
@@ -289,8 +300,8 @@ function renderSalinityInfo(meatWeightG, salinityPreset) {
     const summary = getSalinitySummary(app.selectedRecipe, meatWeightG, salinityPreset);
     els.salinityInfo.textContent = app.t("ui.salinity_summary", "Total salt: {percent}% ({total}, soy sauce contributes ~{soy})")
         .replace("{percent}", summary.percent.toFixed(2))
-        .replace("{total}", formatAmount(summary.totalSalt, "g"))
-        .replace("{soy}", formatAmount(summary.soySalt, "g"));
+        .replace("{total}", formatAmount(summary.totalSalt, "g", app.locale))
+        .replace("{soy}", formatAmount(summary.soySalt, "g", app.locale));
     els.salinityPercent.textContent = `${summary.percent.toFixed(2)}%`;
 }
 
@@ -366,22 +377,32 @@ function renderTelemetry() {
 }
 
 function syncDryerWithTelemetry(telemetry) {
-    if (!telemetry.connected || telemetry.dryerRunning === null) {
+    if (app.moonraker.isDemo || !telemetry.connected || telemetry.dryerRunning === null) {
         return;
     }
 
+    const activeDrying = resolveActiveDrying(telemetry, app.data);
     const snapshot = app.dryer.getSnapshot();
-    if (telemetry.dryerRunning && snapshot.state !== "running") {
-        const restored = reconcileActiveDrying(loadActiveDrying(), telemetry);
-        app.selectedRecipe = app.data.recipes.find((recipe) => recipe.id === restored.recipeId) ?? app.data.recipes[0];
-        restoreDryingControls(restored);
-        app.dryer.setProfile(getCurrentProfile());
-        renderRecipeOptions();
-        renderRecipe();
-        app.dryer.start(restored.elapsedSeconds);
-    } else if (!telemetry.dryerRunning && snapshot.state === "running") {
-        clearActiveDrying();
-        app.dryer.stop("stopped");
+    if (activeDrying) {
+        const processKey = getDryingProcessKey(activeDrying);
+        if (snapshot.state !== "running" || app.activeProcessKey !== processKey) {
+            app.selectedRecipe = app.data.recipes.find((recipe) => recipe.id === activeDrying.recipeId) ?? app.data.recipes[0];
+            app.activeProfileId = activeDrying.profileId;
+            restoreDryingControls(activeDrying);
+            app.activeProcessKey = processKey;
+            renderRecipeOptions();
+            renderRecipe();
+            app.dryer.restore(getCurrentProfile(), activeDrying.elapsedSeconds);
+        } else {
+            app.dryer.syncElapsed(activeDrying.elapsedSeconds);
+        }
+    } else if (snapshot.state === "running") {
+        app.activeProcessKey = null;
+        app.activeProfileId = null;
+        app.dryer.stop(String(telemetry.dryerResult).toUpperCase() === "COMPLETE" ? "complete" : "stopped");
+    } else {
+        app.activeProcessKey = null;
+        app.activeProfileId = null;
     }
 }
 
@@ -512,75 +533,7 @@ function getCurrentProfile() {
         return { stages: [{ temp, minutes, fan: 100 }] };
     }
 
-    return app.data.profiles[app.selectedRecipe.profile];
-}
-
-function saveActiveDrying() {
-    const custom = getCustomSettings();
-    localStorage.setItem(ACTIVE_DRYING_STORAGE_KEY, JSON.stringify({
-        startedAt: Date.now(),
-        mode: isCustomMode() ? "custom" : "profile",
-        recipeId: app.selectedRecipe.id,
-        customTemp: custom.temp,
-        customMinutes: custom.minutes
-    }));
-}
-
-function loadActiveDrying() {
-    try {
-        const saved = JSON.parse(localStorage.getItem(ACTIVE_DRYING_STORAGE_KEY) || "null");
-        return saved && Number.isFinite(saved.startedAt) ? saved : null;
-    } catch {
-        return null;
-    }
-}
-
-function reconcileActiveDrying(saved, telemetry) {
-    if (telemetry.dryerRunning === null || !telemetry.connected) {
-        return saved;
-    }
-
-    if (!telemetry.dryerRunning) {
-        clearActiveDrying();
-        return null;
-    }
-
-    const profileId = String(telemetry.dryerProfile || "").toLowerCase();
-    const mode = profileId === "custom" ? "custom" : "profile";
-    const matchingRecipe = app.data.recipes.find((recipe) => recipe.profile === profileId);
-    const savedMatchesRunningProcess = Boolean(saved?.recipeId)
-        && (mode === "custom" || app.data.recipes.some((recipe) => recipe.id === saved.recipeId && recipe.profile === profileId));
-    const recipeId = savedMatchesRunningProcess
-        ? saved.recipeId
-        : matchingRecipe?.id ?? app.data.recipes[0].id;
-    const elapsedSeconds = Number.isFinite(telemetry.dryerElapsedSeconds)
-        ? telemetry.dryerElapsedSeconds
-        : savedMatchesRunningProcess && Number.isFinite(saved.startedAt)
-            ? Math.max(0, (Date.now() - saved.startedAt) / 1000)
-            : getElapsedAtStageStart(profileId, telemetry.dryerStage);
-    const restored = {
-        startedAt: Number.isFinite(telemetry.dryerElapsedSeconds) || !savedMatchesRunningProcess
-            ? Date.now() - elapsedSeconds * 1000
-            : saved.startedAt,
-        elapsedSeconds,
-        mode,
-        recipeId,
-        customTemp: telemetry.dryerCustomTemp || saved?.customTemp || 60,
-        customMinutes: telemetry.dryerCustomMinutes || saved?.customMinutes || 240
-    };
-
-    localStorage.setItem(ACTIVE_DRYING_STORAGE_KEY, JSON.stringify(restored));
-    return restored;
-}
-
-function getElapsedAtStageStart(profileId, stageNumber) {
-    const stages = app.data.profiles[profileId]?.stages ?? [];
-    return stages.slice(0, Math.max(0, Number(stageNumber) - 1))
-        .reduce((seconds, stage) => seconds + Number(stage.minutes) * 60, 0);
-}
-
-function clearActiveDrying() {
-    localStorage.removeItem(ACTIVE_DRYING_STORAGE_KEY);
+    return app.data.profiles[app.activeProfileId ?? app.selectedRecipe.profile];
 }
 
 function restoreDryingControls(saved) {
@@ -597,7 +550,8 @@ function getStageName(index) {
         return app.t("ui.custom_stage", "Custom drying");
     }
 
-    return app.t(`stages.${app.selectedRecipe.profile}.${index + 1}`, `${app.t("ui.stage", "Этап")} ${index + 1}`);
+    const profileId = app.activeProfileId ?? app.selectedRecipe.profile;
+    return app.t(`stages.${profileId}.${index + 1}`, `${app.t("ui.stage", "Этап")} ${index + 1}`);
 }
 
 function setSuggestedMixMultiplier() {
@@ -623,7 +577,11 @@ function syncDryerProfile() {
 function renderActiveProfile() {
     els.activeProfile.textContent = isCustomMode()
         ? app.t("ui.custom_mode", "Custom")
-        : getProfileName(app.data.profiles[app.selectedRecipe.profile], app.locale, app.t(`profiles.${app.selectedRecipe.profile}`, app.selectedRecipe.profile));
+        : getProfileName(
+            app.data.profiles[app.activeProfileId ?? app.selectedRecipe.profile],
+            app.locale,
+            app.t(`profiles.${app.activeProfileId ?? app.selectedRecipe.profile}`, app.activeProfileId ?? app.selectedRecipe.profile)
+        );
 }
 
 function formatStageDurationLocalized(stage) {

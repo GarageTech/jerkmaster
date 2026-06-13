@@ -18,18 +18,19 @@ Thank you for helping improve JerkMaster.
 2. Do not remove or weaken safety limits without a clear technical justification.
 3. Validate all edited JSON files.
 4. Check JavaScript syntax.
-5. Test all five pages through a local HTTP server.
+5. Test all five pages from the Raspberry-hosted JerkMaster service.
 6. Confirm recipes reference existing ingredients and profiles.
 7. Update documentation when behavior or hardware requirements change.
 8. Add a chronological entry to `CHANGELOG.md` in the same commit for every functional, hardware, interface, documentation, or safety change.
 
-## Local Testing
+## Testing On Raspberry Pi
 
-```powershell
-node tools/dev-server.mjs
+```bash
+cd ~/jerkmaster
+sudo ./tools/install-raspberry-pi.sh
 ```
 
-Open `http://127.0.0.1:8080/?demo=1`.
+Open `http://jerkmaster.local:8080/?demo=1`.
 
 ## Safety Reports
 
