@@ -172,6 +172,8 @@
   "diagnostics.sensor_disconnected": "Датчик отключён",
   "diagnostics.ssr_timeout": "Тайм-аут SSR",
   "diagnostics.mcu_disconnected": "MCU отключён",
+  "diagnostics.moonraker_unavailable": "Moonraker недоступен",
+  "diagnostics.klipper_not_ready": "Klipper не готов",
   "diagnostics.emergency_active": "Аварийная остановка активна",
   "diagnostics.rpi_overheating": "Перегрев RPI",
   "diagnostics.electronic_bay_overheating": "Перегрев электроотсека",

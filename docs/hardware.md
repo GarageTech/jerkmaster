@@ -6,9 +6,10 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 
 - VEVOR H6-C001 food dehydrator
 - AC 220–240 V, 50 Hz, 400 W
-- Reference fan: 220 V, approximately 1320 RPM
-- Reference heater: 220 V
-- Original/reference sensor: NTC 100K
+- Reference fan: AC 220 V, approximately 1320 RPM, 660 Ohm
+- Reference heater: AC 220 V, 120 Ohm
+- Reference LED light: DC 12V
+- Rreference sensor: NTC 100K
 
 ## Controller And Compute
 
@@ -34,10 +35,12 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 - EPCOS 100K NTC for electronics bay
 - Raspberry Pi SoC temperature sensor
 
-## Cooling And Distribution
+## Cooling
 
 - Waveshare PI-FAN-3007 or equivalent Raspberry Pi cooling
-- AC distribution terminals/connectors appropriate for the installation
+
+## AC Distribution
+- Weco 3070-PCM/03-5.033 wecoconnectors.com
 
 ## Required Safety Components
 
@@ -50,15 +53,18 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 
 ## Materials Used In The Reference Build
 
-- Thermal paste
 - M2.5/M3 standoffs
-- M3/M4 fasteners
-- Fiberglass insulation sleeve
-- JST-XH connectors
-- Insulated Faston terminals
-- Bootlace ferrules
-- Ring terminals
+- M2.5/M3/M4 fasteners
+- Fiberglass insulation sleeve d4/6/12 mm
+- JST-XH 2 pin connectors
+- Insulated Faston terminals 4.8/6.3
+- Bootlace ferrules 0.5-1.0 mm2
+- Ring terminals blue/red
+- Wire 0.5-1.0 mm2
+- Heat Shrink Tube
+- Thermal paste
+- Locktite
 
 ## Manufacturer Note
 
-The reference build uses hardware from VEVOR, Raspberry Pi, BTT, Omron, Mean Well, Waveshare, and other manufacturers. None of these companies sponsor or endorse JerkMaster. Their products were selected because they were available and useful. Friendly sponsorship conversations are welcome.
+The reference build uses hardware from VEVOR, Raspberry Pi, BTT, Omron, Mean Well, Waveshare, Weco and other manufacturers. None of these companies sponsor or endorse JerkMaster. Their products were selected because they were available and useful. Friendly sponsorship conversations are welcome.
