@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="../README.md">About</a> ·
+  <a href="build-notes.md">Build notes</a> ·
   <a href="installation.md">Installation</a> ·
   <a href="hardware.md">Hardware</a> ·
   <a href="wiring.md">Wiring</a> ·

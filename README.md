@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="docs/technical-readme.md">Technical overview</a> ·
+  <a href="docs/build-notes.md">Build notes</a> ·
   <a href="docs/installation.md">Installation</a> ·
   <a href="docs/hardware.md">Hardware</a> ·
   <a href="docs/wiring.md">Wiring</a> ·
