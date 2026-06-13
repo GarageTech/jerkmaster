@@ -78,9 +78,13 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 
 ## Materials Used In The Reference Build
 
-![Terminal blocks, ferrules, connectors and crimping tools](../img/docs/illustrations/terminals-wiring-blueprint.webp)
+![Faston terminals, ferrules, connectors and wiring supplies](../img/docs/illustrations/terminals-wiring-blueprint.webp)
 
-The electrical connection sheet compares fully insulated, partially insulated and non-insulated Faston terminals, male and female contacts, ring and fork terminals, ferrules, wiring protection and the correct crimping tool.
+The electrical connection sheet shows one example of each Faston terminal type, insulated ring terminals with different ring sizes, a single black six-position barrier terminal strip, ferrules, wiring and insulation supplies.
+
+![Pro'sKit 6PK-301H crimper and interchangeable dies](../img/docs/illustrations/proskit-6pk-301h-crimper-blueprint.webp)
+
+The Pro'sKit 6PK-301H ratcheting crimper accepts interchangeable dies. Use the CP-236DR die for insulated terminals, the 1PK-3003D2 die for non-insulated Faston terminals, and the CP-236DE die for bootlace ferrules.
 
 ![Screws, nuts, washers and PCB standoffs](../img/docs/illustrations/fasteners-standoffs-blueprint.webp)
 
