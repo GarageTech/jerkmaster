@@ -1,20 +1,160 @@
 # Changelog
 
+This file records the project history in chronological commit order. New functional,
+hardware, interface, documentation, and safety changes must be added here as part of
+the same commit.
+
+## 2026-06-10
+
+### Initial JerkMaster release
+
+- Added the browser dashboard for Klipper and Moonraker dehydrator control.
+- Added multi-stage and custom drying modes.
+- Added recipe, ingredient, and drying-profile editors.
+- Added recipe scaling, salinity calculations, and spice-mix dosage calculations.
+- Added English, Russian, and Ukrainian translations.
+- Added live telemetry, temperature history, diagnostics, and emergency-stop integration.
+- Added initial Klipper, Moonraker, macro, G-code, hardware, installation, and wiring documentation.
+- Added contribution, security, release, issue, and community documentation.
+
+## 2026-06-13
+
+### Tune dryer hardware configuration
+
+- Tuned the generic heater PID configuration from real dryer tests.
+- Updated controller pin mappings and hardware documentation.
+
+### Run JerkMaster on Raspberry Pi
+
+- Added Raspberry Pi installation tooling and deployment instructions.
+- Updated Moonraker configuration for the Raspberry-hosted interface.
+
+### Restore active drying session in dashboard
+
+- Persisted the active drying session so dashboard navigation and browser reopening no longer reset its displayed state.
+- Improved Moonraker drying-state handling.
+
+### Make project story the main README
+
+- Replaced the main README with the JerkMaster project story.
+- Moved the original technical content to `docs/technical-readme.md`.
+
+### Add dehydrator build notes
+
+- Added build notes covering the VEVOR dehydrator, reusable hardware, heatsinks, the original control panel, and mains safety.
+
+### Merge pull request #1
+
+- Merged the initial Raspberry runtime, drying-state restoration, and documentation work.
+
+### Add recipe background and unified docs navigation
+
+- Added recipe background and attribution documentation.
+- Added consistent navigation links across the project documentation.
+
+### Add chamber light control
+
+- Added chamber-light control to Klipper, Moonraker, and the web interface.
+- Added chamber-light wiring and installation documentation.
+
+### Correct chamber light connector to HE1
+
+- Corrected the chamber-light output mapping and documentation from the earlier connector assignment to HE1.
+
+### Add visual documentation and interface screenshots
+
+- Added screenshots for the dashboard, ingredients, recipes, profiles, and jerky-making pages.
+- Added dehydrator and terminal wiring illustrations to the documentation.
+
+### Merge pull request #2
+
+- Merged recipe documentation, chamber-light control, and visual documentation work.
+
+### Update terminal illustration with female Faston connectors
+
+- Updated the terminal illustration to include female Faston connectors.
+
+### Fix dashboard screenshot and surface dehydrator sketch
+
+- Replaced the broken dashboard screenshot.
+- Added a clearly visible dehydrator blueprint illustration.
+
+### Merge pull request #3
+
+- Merged the corrected dashboard screenshot and updated hardware illustrations.
+
+### Correct insulated Faston terminal illustration
+
+- Corrected the insulated Faston terminal variants in the wiring illustration.
+
+### Expand terminal and fastener blueprint documentation
+
+- Expanded the terminal blueprint.
+- Added a separate fastener and PCB-standoff blueprint.
+
+### Separate crimper and terminal blueprint sheets
+
+- Moved the Pro'sKit crimper to a dedicated blueprint sheet.
+- Updated hardware documentation and simplified the terminal sheet.
+
+### Merge pull request #4
+
+- Merged the final terminal, fastener, and crimper illustration updates.
+
+### Restore active drying state from Klipper
+
+- Made Klipper the authoritative source for restoring an active drying process.
+- Improved macro state reporting and dashboard recovery after reconnecting.
+
+### Allow Raspberry hostnames in Moonraker CORS
+
+- Allowed Raspberry Pi hostnames in Moonraker CORS configuration.
+- Documented the hostname access configuration.
+
+### Preserve active drying timer across navigation
+
+- Preserved the drying timer and progress calculation when navigating away from and back to the dashboard.
+
+### Add animated dual status displays
+
+- Added support for two round GC9A01 status displays.
+- Added large status layouts, periodic JerkMaster branding, and animated robot eyes.
+- Added display installation and wiring documentation.
+
+### Add post-drying cooling stage
+
+- Extended the third standard drying stage to 210 minutes.
+- Added a final fan-only cooling stage that runs until the chamber reaches 30°C.
+- Updated profiles, macros, displays, calculations, editors, and translations for temperature-based stages.
+
+### Refine dashboard controls and chart layout
+
+- Added manual fan control and compact chamber-light control.
+- Moved Moonraker status into the controller section.
+- Removed the normal-work diagnostic badge so only actual errors are shown.
+- Changed the chart to a taller, approximately 30-second view.
+
+## 2026-06-14
+
+### Simplify active profile display
+
+- Removed the active-profile frame and background.
+- Displayed the active profile name as blue text.
+
+### Improve temperature chart and equipment status
+
+- Changed the chart to always display chamber, Raspberry Pi, and electronics-bay temperatures.
+- Removed the target-temperature line and displayed current and target values beside the chart legend.
+- Formatted spice-mix and marinade quantities with exactly one decimal place.
+- Spread the equipment status row across the available width and added text to fan and light controls.
+
+### Restore active profile label
+
+- Restored the translated `Active profile` label while keeping the profile name as unframed blue text.
+
 ## Unreleased
 
-### Added
+### Documentation
 
-- Browser dashboard for Klipper/Moonraker dehydrator control
-- Multi-stage and custom drying modes
-- Recipe, ingredient, and drying-profile CRUD editors
-- EN, RU, and UA translations
-- Recipe scaling, salinity calculation, and spice-mix dosage
-- Live telemetry, temperature history, and diagnostic statuses
-- Example Klipper, Moonraker, macro, and G-code configuration
-- Public contribution, security, and community-announcement documentation
-
-### Safety
-
-- Emergency-stop integration
-- Chamber, electronics-bay, and Raspberry Pi temperature monitoring
-- Sensor, MCU, overheating, emergency-stop, and possible SSR/heating-chain fault diagnostics
+- Reconstructed the complete project changelog in chronological commit order with links to all existing commits.
+- Added contributor and agent rules requiring `CHANGELOG.md` updates with future project changes.

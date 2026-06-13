@@ -21,6 +21,7 @@ Thank you for helping improve JerkMaster.
 5. Test all five pages through a local HTTP server.
 6. Confirm recipes reference existing ingredients and profiles.
 7. Update documentation when behavior or hardware requirements change.
+8. Add a chronological entry to `CHANGELOG.md` in the same commit for every functional, hardware, interface, documentation, or safety change.
 
 ## Local Testing
 
