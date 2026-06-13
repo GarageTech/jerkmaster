@@ -33,7 +33,7 @@ Perform the first tests with the heater and fan physically disconnected from the
 
 1. At room temperature, both NTC sensors must report plausible and stable values.
 2. Run `SET_PIN PIN=dryer_fan VALUE=1`, then `SET_PIN PIN=dryer_fan VALUE=0`.
-3. Verify FAN1 supplies 12 V, then run `SET_PIN PIN=chamber_light VALUE=1` and `SET_PIN PIN=chamber_light VALUE=0`.
+3. Verify HE1 supplies 12 V, then run `SET_PIN PIN=chamber_light VALUE=1` and `SET_PIN PIN=chamber_light VALUE=0`.
 4. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
 5. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
 6. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
