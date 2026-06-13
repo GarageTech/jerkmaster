@@ -7,6 +7,7 @@
   "ui.start": "Start",
   "ui.stop": "Stop",
   "ui.estop": "E-STOP",
+  "ui.light": "Light",
   "ui.recipe": "Recipe",
   "ui.profile": "Drying profile",
   "ui.spice_mix": "Spice mix",

@@ -1,8 +1,9 @@
 export class DemoMoonrakerClient {
     isDemo = true;
     #baseStartedAt = Date.now();
+    #lightOn = false;
 
-    getTelemetry({ running, targetTemp }) {
+    getTelemetry({ running = false, targetTemp = 0 } = {}) {
         const elapsed = (Date.now() - this.#baseStartedAt) / 1000;
         const ambient = 25 + Math.sin(elapsed / 14) * 0.4;
         const target = running ? targetTemp : ambient;
@@ -22,11 +23,17 @@ export class DemoMoonrakerClient {
             currentTemp,
             targetTemp,
             heaterOn: running && currentTemp < targetTemp - 0.5,
-            fanOn: running
+            fanOn: running,
+            lightOn: this.#lightOn
         };
     }
 
     runGcode() {
+        return Promise.resolve();
+    }
+
+    setChamberLight(on) {
+        this.#lightOn = Boolean(on);
         return Promise.resolve();
     }
 }
@@ -48,7 +55,8 @@ export class MoonrakerClient {
         currentTemp: 0,
         targetTemp: 0,
         heaterOn: false,
-        fanOn: false
+        fanOn: false,
+        lightOn: false
     };
 
     constructor(baseUrl = getDefaultMoonrakerUrl()) {
@@ -67,6 +75,7 @@ export class MoonrakerClient {
             "temperature_sensor electronics_bay",
             "temperature_sensor raspberry_pi",
             "output_pin dryer_fan",
+            "output_pin chamber_light",
             "gcode_macro DRYER_STATE",
             "webhooks"
         ].map(encodeURIComponent).join("&");
@@ -87,6 +96,7 @@ export class MoonrakerClient {
             const bay = status["temperature_sensor electronics_bay"] ?? {};
             const cpu = status["temperature_sensor raspberry_pi"] ?? {};
             const fan = status["output_pin dryer_fan"] ?? {};
+            const light = status["output_pin chamber_light"] ?? {};
             const dryerState = status["gcode_macro DRYER_STATE"] ?? {};
             const webhooks = status.webhooks ?? {};
             const klipperState = String(serverInfo.klippy_state ?? webhooks.state ?? "disconnected");
@@ -106,7 +116,8 @@ export class MoonrakerClient {
                 currentTemp: Number(heater.temperature ?? 0),
                 targetTemp: Number(heater.target ?? 0),
                 heaterOn: Number(heater.power ?? 0) > 0,
-                fanOn: Number(fan.value ?? 0) > 0
+                fanOn: Number(fan.value ?? 0) > 0,
+                lightOn: Number(light.value ?? 0) > 0
             };
         } catch (error) {
             console.warn("Moonraker telemetry unavailable:", error);
@@ -142,6 +153,11 @@ export class MoonrakerClient {
 
     stopDrying() {
         return this.runGcode("STOP_DRYING");
+    }
+
+    setChamberLight(on) {
+        return this.runGcode(`SET_PIN PIN=chamber_light VALUE=${on ? 1 : 0}`)
+            .then(() => this.refreshTelemetry());
     }
 
     emergencyStop() {

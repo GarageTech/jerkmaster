@@ -55,6 +55,8 @@ const els = {
     customDuration: document.querySelector("#custom-duration"),
     startBtn: document.querySelector("#start-btn"),
     stopBtn: document.querySelector("#stop-btn"),
+    chamberLightBtn: document.querySelector("#chamber-light-btn"),
+    chamberLightLabel: document.querySelector("#chamber-light-label"),
     emergencyStopBtn: document.querySelector("#emergency-stop-btn")
 };
 
@@ -161,6 +163,18 @@ function bindEvents() {
         await runMoonrakerCommand(() => app.moonraker.stopDrying?.());
         clearActiveDrying();
         app.dryer.stop();
+    });
+    els.chamberLightBtn.addEventListener("click", async () => {
+        const telemetry = app.moonraker.getTelemetry({
+            running: app.dryer.getSnapshot().state === "running",
+            targetTemp: app.dryer.getSnapshot().stage.temp
+        });
+        els.chamberLightBtn.disabled = true;
+        try {
+            await runMoonrakerCommand(() => app.moonraker.setChamberLight?.(!telemetry.lightOn));
+        } finally {
+            els.chamberLightBtn.disabled = false;
+        }
     });
     els.emergencyStopBtn.addEventListener("click", async () => {
         await runMoonrakerCommand(() => app.moonraker.emergencyStop?.());
@@ -321,6 +335,10 @@ function renderTelemetry() {
     els.fanSsrState.textContent = `${app.t("ui.fan", "Fan")} SSR ${telemetry.fanOn ? "ON" : "OFF"}`;
     els.fanSsrState.className = `badge ${telemetry.fanOn ? "bg-success" : "bg-secondary"}`;
     els.fanState.innerHTML = `<i class="bi bi-fan" aria-hidden="true"></i> ${app.t("ui.fan", "Fan")} ${app.t(telemetry.fanOn ? "ui.on" : "ui.off", telemetry.fanOn ? "on" : "off")}`;
+    els.chamberLightBtn.classList.toggle("is-on", telemetry.lightOn);
+    els.chamberLightBtn.setAttribute("aria-pressed", String(telemetry.lightOn));
+    els.chamberLightBtn.disabled = !telemetry.connected || !telemetry.mcuConnected;
+    els.chamberLightLabel.textContent = `${app.t("ui.light", "Light")} ${app.t(telemetry.lightOn ? "ui.on" : "ui.off", telemetry.lightOn ? "on" : "off")}`;
     const diagnostics = detectDiagnostics(telemetry, snapshot);
     renderDiagnostics(diagnostics);
     renderAlerts(diagnostics);
