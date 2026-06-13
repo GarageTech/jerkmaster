@@ -19,6 +19,8 @@ This project did not start with choosing a dehydrator specifically for modificat
 
 By coincidence, this particular model turned out to be a very good platform for this type of conversion.
 
+![JerkMaster dehydrator cutaway blueprint](../img/docs/illustrations/jerkmaster-cutaway-blueprint.webp)
+
 VEVOR sells several dehydrators in this line, differing in size, power and number of drying trays. However, they appear to share a very similar layout: a stainless steel drying chamber, rear-mounted fan and heater assembly, and a separate electronics bay located at the top of the unit.
 
 My unit is the smallest model in the range, with 6 trays measuring approximately 20 × 28 cm. In practice, it can hold around 1.2–1.4 kg of meat sliced to about 5 mm thickness.
