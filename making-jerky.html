@@ -9,7 +9,7 @@
 </head>
 <body data-bs-theme="dark">
 <main class="container-fluid py-3">
-    <header class="app-header mb-4"><img src="img/logo.png" alt="JerkMaster" class="jm-logo"><div class="header-actions"><nav class="page-nav"><a href="index.html"><i class="bi bi-speedometer2"></i><span data-i18n="nav.dashboard">Dashboard</span></a><a href="ingredients.html"><i class="bi bi-basket2"></i><span data-i18n="nav.ingredients">Ingredients</span></a><a href="recipes.html"><i class="bi bi-journal-richtext"></i><span data-i18n="nav.recipes">Recipes</span></a><a href="profiles.html"><i class="bi bi-thermometer-half"></i><span data-i18n="nav.profiles">Profiles</span></a><a href="making-jerky.html" class="active"><i class="bi bi-stars"></i><span data-i18n="nav.making_jerky">Making Jerky</span></a></nav><select class="form-select language-select" data-language-select><option value="ru">RU</option><option value="en">EN</option><option value="ua">UA</option></select></div></header>
+    <header class="app-header mb-4"><img src="img/logo.png" alt="JerkMaster" class="jm-logo"><div class="header-actions"><nav class="page-nav"><a href="index.html"><i class="bi bi-speedometer2"></i><span data-i18n="nav.dashboard">Dashboard</span></a><a href="ingredients.html"><i class="bi bi-basket2"></i><span data-i18n="nav.ingredients">Ingredients</span></a><a href="recipes.html"><i class="bi bi-journal-richtext"></i><span data-i18n="nav.recipes">Recipes</span></a><a href="profiles.html"><i class="bi bi-thermometer-half"></i><span data-i18n="nav.profiles">Profiles</span></a><a href="making-jerky.html" class="active"><i class="bi bi-stars"></i><span data-i18n="nav.making_jerky">Making Jerky</span></a></nav><button id="chamber-light-btn" class="btn btn-outline-warning" type="button" aria-pressed="false"><i class="bi bi-lightbulb" aria-hidden="true"></i><span id="chamber-light-label" data-i18n="ui.light">Light</span></button><select class="form-select language-select" data-language-select><option value="ru">RU</option><option value="en">EN</option><option value="ua">UA</option></select></div></header>
     <section class="content-hero content-hero-plain mb-3"><div><h1 data-i18n="making.title">Making Jerky</h1><p data-i18n="making.intro">A practical workspace for documenting your complete jerky process.</p></div></section>
     <section class="process-list">
         <article class="card process-step"><div class="card-body"><span>01</span><div><h2 data-i18n="making.select.title">Select and prepare meat</h2><p data-i18n="making.select.text">Use lean meat, remove visible fat and chill it before slicing.</p></div></div></article>
@@ -21,5 +21,6 @@
     <footer class="footer-row text-secondary mt-4 small"><span>JerkMaster v0.1.0</span><a href="https://github.com/GarageTech/jerkmaster" target="_blank" rel="noopener noreferrer" class="footer-github"><i class="bi bi-github"></i> GarageTech / JerkMaster</a></footer>
 </main>
 <script type="module" src="js/content-pages.js"></script>
+<script type="module" src="js/light-control.js"></script>
 </body>
 </html>

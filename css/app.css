@@ -697,6 +697,18 @@ input[type="number"] {
     font-weight: 700;
 }
 
+#chamber-light-btn {
+    min-width: 110px;
+    white-space: nowrap;
+}
+
+#chamber-light-btn.is-on {
+    color: #111827;
+    background: var(--jm-warning);
+    border-color: var(--jm-warning);
+    box-shadow: 0 0 14px rgba(245, 158, 11, .35);
+}
+
 ::-webkit-scrollbar {
     width: 10px;
 }
