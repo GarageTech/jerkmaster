@@ -192,6 +192,7 @@ security-related history rewrite does not leave links to superseded commits.
 
 ### Documentation
 
+- Replaced the small About video link with a prominent custom video preview.
 - Added the project video to About and embedded the practical process video in Make Jerky using lightweight YouTube links.
 - Completed the public-release secret/history audit and published the `v0.1.0-alpha` tag.
 - Added real build photographs covering the electronics-bay conversion, terminal wiring, front-panel fabrication, and finished jerky.
