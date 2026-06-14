@@ -30,32 +30,20 @@ These are common reference assignments, not a guarantee for a specific board rev
 
 ## Proposed Front-Panel Power And Indicator Wiring
 
-### Current Output Conflict
+### Final Front-Panel Connections
 
-The current reference configuration already uses:
-
-| Output | Pin | Current purpose |
+| Circuit | Connection | Purpose |
 |---|---|---|
-| HE0 | `P2.7` | Heater SSR |
-| FAN0 | `P2.3` | Circulation-fan SSR |
-| HE1 | `P2.4` | Chamber light |
-| BED | `P2.5` | Free |
-
-Therefore `BED / P2.5` is the only free onboard power MOSFET output and is used
-for the blue button LED. HE1 remains dedicated to the chamber light.
-
-The recommended reference arrangement is:
-
-| Button circuit | Recommended connection | Reason |
-|---|---|---|
-| Momentary `COM` / `NO` | BTT relay button input | Direct normal-power request |
+| Momentary button `COM` / `NO` | BTT relay button input | Normal-power request |
 | LED common | Fused 12 V, correct polarity | Matches a 12 V button LED |
-| Blue LED return | `BED / P2.5` low-side output | Free SKR MOSFET for READY/RUNNING/COMPLETE |
+| Blue LED return | `BED / P2.5` low-side output | READY/RUNNING/COMPLETE indication |
 | Unused LED channels | Disconnected and insulated | Only the blue channel is used |
-| HE1 / `P2.4` | Keep chamber light | Avoids the existing output conflict |
+| Chamber light | `HE1 / P2.4` low-side output | Existing chamber illumination |
+| Heater SSR | `HE0 / P2.7` | Heater control |
+| Circulation-fan SSR | `FAN0 / P2.3` | Drying-chamber airflow |
 
-Do not connect two independent loads to HE1 if they must be controlled
-independently.
+BED and HE1 are low-side MOSFET outputs: connect each load according to the SKR
+board schematic and verify polarity before applying power.
 
 ### Momentary Button And BTT Shutdown Relay
 
