@@ -35,6 +35,28 @@ In other words, use what you already have — especially if, like many DIY and 3
 
 Regarding SSR heatsinks: in my build I used oversized heatsinks. This was mainly because I was building the project away from my main workshop, where I do not have access to my usual stock of parts. During early testing, the rear wall of the dehydrator became quite hot, so I decided to use large heatsinks from the beginning rather than buy and test several smaller options. It was a conservative choice intended to remove one possible thermal problem from the project.
 
+## Electronics Bay Conversion
+
+The factory electronics bay provided enough space for the Raspberry Pi, SKR
+controller, two power supplies, SSRs, heatsinks, and mains distribution. The
+photos below show the bay before the conversion and during assembly.
+
+| Original electronics bay | Open converted bay |
+|---|---|
+| ![Original dehydrator electronics bay](../img/docs/build/original-electronics-bay.jpg) | ![Open JerkMaster electronics bay](../img/docs/build/electronics-bay-open.jpg) |
+
+The final layout mounts the main electronics to the removable upper panel. This
+makes the complete assembly accessible for inspection, but it also makes cable
+routing and strain relief especially important.
+
+These are build-progress photographs taken with the appliance disconnected and
+opened for inspection. Never operate the dehydrator with exposed mains wiring
+or an open electronics enclosure.
+
+| Installed electronics | Barrier terminal wiring |
+|---|---|
+| ![Installed JerkMaster electronics](../img/docs/build/electronics-bay-installed.jpg) | ![Barrier terminal and heat-resistant wiring](../img/docs/build/barrier-terminal-wiring.jpg) |
+
 ## Safety Warning
 
 This project involves modifying a mains-powered household appliance with a metal enclosure and 220–240 V AC wiring.
@@ -57,6 +79,14 @@ momentary 12 V RGB push button.
 
 ![JerkMaster front-panel concept](../img/docs/illustrations/front-panel-concept.png)
 
+The original stainless panel has already been stripped and prepared for the new
+layout. The rectangular opening and circular cutouts will be covered by the new
+front-panel insert.
+
+| Stripped original frame | Prepared front-panel cutouts |
+|---|---|
+| ![Stripped original control-panel frame](../img/docs/build/front-panel-frame.jpg) | ![Prepared front-panel cutouts](../img/docs/build/front-panel-cutouts.jpg) |
+
 The two fans sit on either side of the displays and provide a direct airflow path
 through the electronics bay. They are not software-controlled: whenever the
 electronics power supply is on, both fans run. This avoids making controller
@@ -75,3 +105,14 @@ V1.2. Its switch contacts and RGB LED are electrically separate:
 The button is a normal power-control interface, not an emergency stop. It must
 not replace the physical E-stop, independent thermal fuse, breaker, protective
 earth, or a correctly rated safety contactor where one is required.
+
+## Real-World Use
+
+The converted dehydrator is already used for regular jerky batches while the
+hardware and interface continue to evolve.
+
+| Loaded dehydrator and finished tray | Finished jerky |
+|---|---|
+| ![Loaded dehydrator with a finished tray](../img/docs/build/dehydrator-loaded-and-unloaded.jpg) | ![Finished homemade jerky](../img/docs/build/finished-jerky.jpg) |
+
+![JerkMaster dehydrator beside the project documentation](../img/docs/build/jerkmaster-and-project-docs.jpg)
