@@ -9,11 +9,14 @@
   "right_cs_pin": 7,
   "left_backlight_pin": 18,
   "right_backlight_pin": 19,
+  "blackjack_button_pin": 17,
   "left_rotation": 0,
   "right_rotation": 0,
   "refresh_seconds": 0.2,
   "telemetry_refresh_seconds": 1.0,
   "status_duration_seconds": 45,
   "logo_duration_seconds": 6,
-  "eyes_duration_seconds": 10
+  "eyes_duration_seconds": 10,
+  "beer_duration_seconds": 12,
+  "blackjack_duration_seconds": 10
 }

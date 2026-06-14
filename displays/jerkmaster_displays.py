@@ -4,6 +4,7 @@
 import json
 import math
 import os
+import random
 import time
 import urllib.parse
 import urllib.request
@@ -12,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import spidev
-from gpiozero import OutputDevice
+from gpiozero import Button, OutputDevice
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -356,6 +357,198 @@ def render_eye(side, animation_time):
     return image
 
 
+def render_beer_progress(side, telemetry, animation_time, scene_duration=8.0):
+    image = Image.new("RGB", (WIDTH, HEIGHT), "#020507")
+    draw = ImageDraw.Draw(image)
+    progress, remaining = process_progress(telemetry)
+    reveal_duration = min(2.4, max(0.8, scene_duration * 0.35))
+    shown_progress = progress * smooth_step(animation_time / reveal_duration)
+
+    draw.arc((8, 8, 232, 232), 0, 359, fill=TRACK, width=8)
+    if side == "left":
+        render_beer_glass(draw, shown_progress, animation_time)
+    else:
+        render_drinking_to_drying(draw, progress, remaining, animation_time)
+    return image
+
+
+def render_drinking_to_drying(draw, progress, remaining, animation_time):
+    if animation_time < 1.75:
+        centered(draw, (120, 108), "DRINKING", FONTS["medium"], AMBER)
+        centered(draw, (120, 145), "PLEASE WAIT", FONTS["small"], MUTED)
+        return
+
+    if animation_time < 4.25:
+        transition = smooth_step((animation_time - 1.75) / 2.5)
+        crt_glitch_text(draw, (120, 108), "DRINKING", FONTS["medium"], AMBER, transition, False, animation_time)
+        crt_glitch_text(draw, (120, 108), "DRYING", FONTS["medium"], AMBER, transition, True, animation_time)
+        crt_noise(draw, transition, animation_time)
+        if transition < 0.55:
+            centered(draw, (120, 145), "PLEASE WAIT", FONTS["small"], mix_color(MUTED, BACKGROUND, transition / 0.55))
+        return
+
+    if animation_time < 6.25:
+        centered(draw, (120, 108), "DRYING", FONTS["medium"], AMBER)
+        return
+
+    centered(draw, (120, 47), "DRYING", FONTS["label"], MUTED)
+    centered(draw, (120, 111), f"{progress * 100:.0f}%", FONTS["large"], AMBER)
+    centered(draw, (120, 158), "COMPLETE", FONTS["label"], WHITE)
+    centered(draw, (120, 194), format_duration(remaining), FONTS["medium"], CYAN)
+
+
+def crt_glitch_text(draw, center, text, selected_font, fill, transition, assembling, animation_time):
+    layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    layer_draw = ImageDraw.Draw(layer)
+    box = layer_draw.textbbox((0, 0), text, font=selected_font)
+    text_width = box[2] - box[0]
+    text_height = box[3] - box[1]
+    x = int(center[0] - text_width / 2)
+    y = int(center[1] - text_height / 2)
+    layer_draw.text((x, y), text, font=selected_font, fill=fill)
+
+    strength = math.sin(transition * math.pi)
+    visibility = transition if assembling else 1 - transition
+    randomizer = random.Random(int(animation_time * 16) + (937 if assembling else 419))
+    band_height = 4
+    for band_y in range(max(0, y - 3), min(HEIGHT, y + text_height + 6), band_height):
+        if randomizer.random() > visibility + 0.25 * strength:
+            continue
+        jitter = int(randomizer.uniform(-24, 24) * strength)
+        strip = layer.crop((0, band_y, WIDTH, min(HEIGHT, band_y + band_height)))
+        draw._image.paste(strip, (jitter, band_y), strip)
+
+
+def crt_noise(draw, transition, animation_time):
+    strength = math.sin(transition * math.pi)
+    if strength < 0.08:
+        return
+    randomizer = random.Random(int(animation_time * 24) + 2026)
+    for _ in range(int(5 + strength * 15)):
+        y = randomizer.randint(75, 138)
+        x = randomizer.randint(38, 180)
+        length = randomizer.randint(8, 42)
+        color = CYAN if randomizer.random() > 0.55 else MUTED
+        draw.line((x, y, min(205, x + length), y), fill=color, width=randomizer.choice((1, 1, 2)))
+    if strength > 0.55:
+        scan_y = 83 + int((animation_time * 95) % 48)
+        draw.rectangle((35, scan_y, 205, scan_y + 2), fill="#dbeafe")
+
+
+def mix_color(start, end, amount):
+    amount = max(0.0, min(1.0, amount))
+    start_rgb = tuple(int(start[index:index + 2], 16) for index in (1, 3, 5))
+    end_rgb = tuple(int(end[index:index + 2], 16) for index in (1, 3, 5))
+    mixed = tuple(round(first + (second - first) * amount) for first, second in zip(start_rgb, end_rgb))
+    return f"#{mixed[0]:02x}{mixed[1]:02x}{mixed[2]:02x}"
+
+
+def render_beer_glass(draw, progress, animation_time):
+    glass = (48, 25, 180, 214)
+    glass_inner = (57, 34, 171, 205)
+    glass_height = glass_inner[3] - glass_inner[1]
+    fill_top = glass_inner[3] - int(glass_height * max(0.0, min(1.0, progress)))
+
+    draw.rounded_rectangle(glass, radius=20, outline=WHITE, width=7)
+    draw.arc((164, 76, 225, 175), -86, 88, fill=WHITE, width=7)
+    draw.arc((171, 87, 211, 163), -86, 88, fill=WHITE, width=5)
+    if fill_top >= glass_inner[3]:
+        return
+
+    beer_color = "#f59e0b"
+    beer_dark = "#d97706"
+    foam_height = min(20, glass_inner[3] - fill_top)
+    draw.rounded_rectangle(
+        (glass_inner[0], fill_top, glass_inner[2], glass_inner[3]),
+        radius=13,
+        fill=beer_color,
+    )
+    body_top = min(fill_top + 14, glass_inner[3] - 12)
+    if body_top < glass_inner[3] - 12:
+        draw.rectangle((glass_inner[0], body_top, glass_inner[2], glass_inner[3] - 12), fill=beer_dark)
+        draw.rectangle((glass_inner[0], body_top, glass_inner[2], glass_inner[3] - 12), fill=beer_color)
+
+    foam_y = fill_top
+    draw.ellipse((57, foam_y - 5, 91, foam_y + foam_height), fill="#fff7d6")
+    draw.ellipse((82, foam_y - 9, 125, foam_y + foam_height), fill="#fff7d6")
+    draw.ellipse((116, foam_y - 5, 151, foam_y + foam_height), fill="#fff7d6")
+    draw.ellipse((143, foam_y - 7, 171, foam_y + foam_height), fill="#fff7d6")
+
+    bubble_columns = ((74, 0.3, 4), (96, 0.7, 3), (119, 0.1, 5), (145, 0.5, 4), (160, 0.85, 3))
+    liquid_top = min(glass_inner[3] - 10, fill_top + foam_height)
+    liquid_height = glass_inner[3] - liquid_top - 8
+    if liquid_height <= 8:
+        return
+    for x, offset, radius in bubble_columns:
+        travel = (animation_time * (28 + radius * 3) + offset * liquid_height) % liquid_height
+        y = glass_inner[3] - 7 - travel
+        if y > liquid_top + radius:
+            draw.ellipse((x - radius, y - radius, x + radius, y + radius), outline="#fff7d6", width=2)
+
+
+def render_blackjack(side, animation_time, scene_duration=10.0):
+    image = Image.new("RGB", (WIDTH, HEIGHT), "#06150e")
+    draw = ImageDraw.Draw(image)
+    draw.arc((8, 8, 232, 232), 0, 359, fill="#166534", width=8)
+    draw.ellipse((28, 28, 212, 212), outline="#14532d", width=3)
+
+    deal_progress = smooth_step(min(1.0, animation_time / 1.6))
+    card_x = int((-105 if side == "left" else 245) + (117 - (-105 if side == "left" else 245)) * deal_progress)
+    rank = "A" if side == "left" else "K"
+    suit = "spade" if side == "left" else "heart"
+    render_playing_card(draw, card_x, 111, rank, suit)
+
+    if animation_time >= 1.8:
+        label_progress = smooth_step(min(1.0, (animation_time - 1.8) / 0.8))
+        label = "BLACK" if side == "left" else "JACK"
+        centered(draw, (120, 34), label, FONTS["medium"], mix_color("#06150e", AMBER, label_progress))
+        centered(draw, (120, 211), "21", FONTS["medium"], mix_color("#06150e", WHITE, label_progress))
+
+    if animation_time >= 2.5:
+        render_casino_sparkles(draw, side, animation_time)
+    if animation_time >= scene_duration - 1.3:
+        flash = 0.45 + 0.55 * abs(math.sin(animation_time * math.tau * 2))
+        draw.arc((8, 8, 232, 232), 0, 359, fill=mix_color("#166534", AMBER, flash), width=8)
+    return image
+
+
+def render_playing_card(draw, center_x, center_y, rank, suit):
+    box = (center_x - 54, center_y - 72, center_x + 54, center_y + 72)
+    draw.rounded_rectangle(box, radius=12, fill="#f8fafc", outline="#d1d5db", width=3)
+    color = RED if suit == "heart" else "#111827"
+    draw.text((box[0] + 10, box[1] + 7), rank, font=FONTS["medium"], fill=color)
+    draw.text((box[2] - 31, box[3] - 40), rank, font=FONTS["medium"], fill=color)
+    if suit == "heart":
+        draw_heart(draw, center_x, center_y + 2, 25, color)
+    else:
+        draw_spade(draw, center_x, center_y + 3, 27, color)
+
+
+def draw_heart(draw, center_x, center_y, radius, color):
+    draw.ellipse((center_x - radius, center_y - radius, center_x, center_y), fill=color)
+    draw.ellipse((center_x, center_y - radius, center_x + radius, center_y), fill=color)
+    draw.polygon(((center_x - radius, center_y - 3), (center_x + radius, center_y - 3), (center_x, center_y + radius + 18)), fill=color)
+
+
+def draw_spade(draw, center_x, center_y, radius, color):
+    draw.polygon(((center_x, center_y - radius - 20), (center_x - radius, center_y + 4), (center_x + radius, center_y + 4)), fill=color)
+    draw.ellipse((center_x - radius, center_y - 5, center_x, center_y + radius), fill=color)
+    draw.ellipse((center_x, center_y - 5, center_x + radius, center_y + radius), fill=color)
+    draw.polygon(((center_x - 8, center_y + radius - 4), (center_x + 8, center_y + radius - 4), (center_x + 18, center_y + radius + 20), (center_x - 18, center_y + radius + 20)), fill=color)
+
+
+def render_casino_sparkles(draw, side, animation_time):
+    randomizer = random.Random(int(animation_time * 12) + (21 if side == "left" else 42))
+    for _ in range(9):
+        angle = randomizer.random() * math.tau
+        distance = randomizer.randint(68, 98)
+        x = int(120 + math.cos(angle) * distance)
+        y = int(120 + math.sin(angle) * distance)
+        radius = randomizer.choice((2, 3, 4))
+        color = randomizer.choice((AMBER, WHITE, RED))
+        draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color)
+
+
 def circular_eye_pose(side, animation_time):
     """Circular-eye sequence inspired by SpiderMaf's simple OLED eye motions."""
     sequence_time = animation_time % 10.0
@@ -483,6 +676,8 @@ def main():
         OutputDevice(int(config["right_backlight_pin"]), initial_value=False),
         int(config.get("right_rotation", 0)),
     )
+    blackjack_button_pin = config.get("blackjack_button_pin", 17)
+    blackjack_button = Button(int(blackjack_button_pin), pull_up=True, bounce_time=0.08) if blackjack_button_pin is not None else None
     reset.off()
     time.sleep(0.02)
     reset.on()
@@ -497,7 +692,10 @@ def main():
     status_duration = float(config["status_duration_seconds"])
     logo_duration = float(config["logo_duration_seconds"])
     eyes_duration = float(config["eyes_duration_seconds"])
-    cycle_duration = status_duration + logo_duration + eyes_duration
+    beer_duration = float(config.get("beer_duration_seconds", 8))
+    blackjack_duration = float(config.get("blackjack_duration_seconds", 10))
+    blackjack_started = None
+    blackjack_was_pressed = False
     last_mode = None
 
     while True:
@@ -509,22 +707,43 @@ def main():
                 last_telemetry_read = now
                 telemetry_updated = True
 
-            cycle_time = (now - started_at) % cycle_duration
-            if cycle_time < logo_duration:
-                mode = "logo"
-                phase = cycle_time / logo_duration
-                left.show(render_logo(logo, "left", phase))
-                right.show(render_logo(logo, "right", phase))
-            elif cycle_time < logo_duration + status_duration:
-                mode = "status"
-                if telemetry_updated or last_mode != mode:
-                    left.show(render_temperature(telemetry))
-                    right.show(render_process(telemetry))
+            blackjack_pressed = blackjack_button.is_pressed if blackjack_button else False
+            if blackjack_pressed and not blackjack_was_pressed and telemetry.running:
+                blackjack_started = now
+            blackjack_was_pressed = blackjack_pressed
+            if not telemetry.running:
+                blackjack_started = None
+
+            blackjack_time = now - blackjack_started if blackjack_started is not None else None
+            if blackjack_time is not None and blackjack_time < blackjack_duration:
+                mode = "blackjack"
+                left.show(render_blackjack("left", blackjack_time, blackjack_duration))
+                right.show(render_blackjack("right", blackjack_time, blackjack_duration))
             else:
-                mode = "eyes"
-                animation_time = cycle_time - logo_duration - status_duration
-                left.show(render_eye("left", animation_time))
-                right.show(render_eye("right", animation_time))
+                blackjack_started = None
+                active_beer_duration = beer_duration if telemetry.running else 0
+                cycle_duration = status_duration + logo_duration + eyes_duration + active_beer_duration
+                cycle_time = (now - started_at) % cycle_duration
+                if cycle_time < logo_duration:
+                    mode = "logo"
+                    phase = cycle_time / logo_duration
+                    left.show(render_logo(logo, "left", phase))
+                    right.show(render_logo(logo, "right", phase))
+                elif cycle_time < logo_duration + status_duration:
+                    mode = "status"
+                    if telemetry_updated or last_mode != mode:
+                        left.show(render_temperature(telemetry))
+                        right.show(render_process(telemetry))
+                elif cycle_time < logo_duration + status_duration + eyes_duration:
+                    mode = "eyes"
+                    animation_time = cycle_time - logo_duration - status_duration
+                    left.show(render_eye("left", animation_time))
+                    right.show(render_eye("right", animation_time))
+                else:
+                    mode = "beer"
+                    animation_time = cycle_time - logo_duration - status_duration - eyes_duration
+                    left.show(render_beer_progress("left", telemetry, animation_time, beer_duration))
+                    right.show(render_beer_progress("right", telemetry, animation_time, beer_duration))
             last_mode = mode
         except Exception as error:
             message = type(error).__name__.upper()

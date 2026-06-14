@@ -25,7 +25,7 @@ MUTED = "#94a3b8"
 
 def load_display_module():
     sys.modules.setdefault("spidev", types.SimpleNamespace(SpiDev=object))
-    sys.modules.setdefault("gpiozero", types.SimpleNamespace(OutputDevice=object))
+    sys.modules.setdefault("gpiozero", types.SimpleNamespace(Button=object, OutputDevice=object))
     spec = importlib.util.spec_from_file_location("jerkmaster_displays", DISPLAY_MODULE)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
