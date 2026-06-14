@@ -9,6 +9,8 @@ export class DemoMoonrakerClient {
         const ambient = 25 + Math.sin(elapsed / 14) * 0.4;
         const target = running ? targetTemp : ambient;
         const currentTemp = ambient + (target - ambient) * (running ? 0.62 : 0.08);
+        const heaterPower = running && currentTemp < targetTemp - 0.5 ? 0.62 : 0;
+        const fanPower = running || this.#fanOn ? 1 : 0;
 
         return {
             connected: true,
@@ -28,8 +30,10 @@ export class DemoMoonrakerClient {
             electronicsTemp: 35 + Math.cos(elapsed / 11) * 1.2,
             currentTemp,
             targetTemp,
-            heaterOn: running && currentTemp < targetTemp - 0.5,
-            fanOn: running || this.#fanOn,
+            heaterOn: heaterPower > 0,
+            heaterPower,
+            fanOn: fanPower > 0,
+            fanPower,
             lightOn: this.#lightOn
         };
     }
@@ -71,7 +75,9 @@ export class MoonrakerClient {
         currentTemp: 0,
         targetTemp: 0,
         heaterOn: false,
+        heaterPower: 0,
         fanOn: false,
+        fanPower: 0,
         lightOn: false
     };
 
@@ -138,7 +144,9 @@ export class MoonrakerClient {
                 currentTemp: Number(heater.temperature ?? 0),
                 targetTemp: Number(heater.target ?? 0),
                 heaterOn: Number(heater.power ?? 0) > 0,
+                heaterPower: clampPower(heater.power),
                 fanOn: Number(fan.value ?? 0) > 0,
+                fanPower: clampPower(fan.value),
                 lightOn: Number(light.value ?? 0) > 0
             };
         } catch (error) {
@@ -222,4 +230,8 @@ function getDryerElapsedSeconds(dryerState, toolhead) {
     }
 
     return Math.max(0, elapsedBeforeStage + estimatedPrintTime - stageStartedAt);
+}
+
+function clampPower(value) {
+    return Math.max(0, Math.min(1, Number(value) || 0));
 }

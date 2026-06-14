@@ -363,9 +363,9 @@ function renderTelemetry() {
     els.electronicsTemp.textContent = `Bay ${telemetry.electronicsTemp.toFixed(0)}°C`;
     els.currentTemp.textContent = `${telemetry.currentTemp.toFixed(1)}°C`;
     els.heaterState.innerHTML = `<i class="bi bi-fire" aria-hidden="true"></i> ${app.t("ui.heater", "Heater")} ${app.t(telemetry.heaterOn ? "ui.on" : "ui.off", telemetry.heaterOn ? "on" : "off")}`;
-    els.heaterSsrState.textContent = `${app.t("ui.heater", "Heater")} SSR ${telemetry.heaterOn ? "ON" : "OFF"}`;
+    els.heaterSsrState.textContent = `${app.t("ui.heater", "Heater")} SSR ${telemetry.heaterOn ? "ON" : "OFF"} · PWM ${formatPowerPercent(telemetry.heaterPower)}`;
     els.heaterSsrState.className = `badge ${telemetry.heaterOn ? "bg-success" : "bg-secondary"}`;
-    els.fanSsrState.textContent = `${app.t("ui.fan", "Fan")} SSR ${telemetry.fanOn ? "ON" : "OFF"}`;
+    els.fanSsrState.textContent = `${app.t("ui.fan", "Fan")} SSR ${telemetry.fanOn ? "ON" : "OFF"} · PWM ${formatPowerPercent(telemetry.fanPower)}`;
     els.fanSsrState.className = `badge ${telemetry.fanOn ? "bg-success" : "bg-secondary"}`;
     els.fanToggleLabel.textContent = `${app.t("ui.fan", "Fan")} ${app.t(telemetry.fanOn ? "ui.on" : "ui.off", telemetry.fanOn ? "on" : "off")}`;
     els.chamberLightBtn.classList.toggle("is-on", telemetry.lightOn);
@@ -538,6 +538,10 @@ function detectDiagnostics(telemetry, snapshot) {
 
 function isInvalidSensorValue(value) {
     return !Number.isFinite(value) || value <= 0;
+}
+
+function formatPowerPercent(value) {
+    return `${Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 100)}%`;
 }
 
 function renderAlerts(diagnostics) {

@@ -156,6 +156,7 @@ the same commit.
 
 ### Changed
 
+- Added live heater and fan PWM percentages to the controller status row.
 - Placed the `Active profile` label above the active profile name.
 - Changed the temperature chart to a minute-based time axis with selectable 5, 15, 30, and 60 minute ranges.
 - Made Klipper `DRYER_STATE` the only authoritative source for real drying-state restoration.
