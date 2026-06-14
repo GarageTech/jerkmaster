@@ -16,6 +16,9 @@ const DIAGNOSTIC_LIMITS = {
     minimumHeatingGain: 2
 };
 
+const CHART_TIME_RANGES_MINUTES = [5, 15, 30, 60];
+const CHART_MAX_HISTORY_MS = Math.max(...CHART_TIME_RANGES_MINUTES) * 60 * 1000;
+
 const els = {
     recipeSelect: document.querySelector("#recipe-select"),
     meatWeight: document.querySelector("#meat-weight"),
@@ -43,6 +46,9 @@ const els = {
     chartTargetTemp: document.querySelector("#chart-target-temp"),
     chartCpuTemp: document.querySelector("#chart-cpu-temp"),
     chartBayTemp: document.querySelector("#chart-bay-temp"),
+    chartTimeShorter: document.querySelector("#chart-time-shorter"),
+    chartTimeLonger: document.querySelector("#chart-time-longer"),
+    chartTimeRange: document.querySelector("#chart-time-range"),
     cpuTemp: document.querySelector("#cpu-temp"),
     electronicsTemp: document.querySelector("#electronics-temp"),
     heaterState: document.querySelector("#heater-state"),
@@ -71,7 +77,8 @@ const app = {
     locale: getPreferredLocale(),
     heaterWatch: null,
     activeProcessKey: null,
-    activeProfileId: null
+    activeProfileId: null,
+    chartTimeRangeIndex: 1
 };
 
 init().catch((error) => {
@@ -153,6 +160,8 @@ function bindEvents() {
     els.meatWeight.addEventListener("input", renderIngredients);
     els.mixMultiplier.addEventListener("input", renderIngredients);
     els.salinitySelect.addEventListener("change", renderIngredients);
+    els.chartTimeShorter.addEventListener("click", () => setChartTimeRange(app.chartTimeRangeIndex - 1));
+    els.chartTimeLonger.addEventListener("click", () => setChartTimeRange(app.chartTimeRangeIndex + 1));
     els.startBtn.addEventListener("click", async () => {
         if (isCustomMode()) {
             const { temp, minutes } = getCustomSettings();
@@ -414,7 +423,6 @@ function initTemperatureChart() {
     app.tempChart = new window.Chart(els.tempChart, {
         type: "line",
         data: {
-            labels: [],
             datasets: [
                 {
                     label: app.t("ui.chamber", "Chamber"),
@@ -443,7 +451,15 @@ function initTemperatureChart() {
             maintainAspectRatio: false,
             animation: false,
             scales: {
-                x: { ticks: { color: "#9ca3af" }, grid: { color: "#252a31" } },
+                x: {
+                    type: "linear",
+                    ticks: {
+                        color: "#9ca3af",
+                        stepSize: 60 * 1000,
+                        callback: (value) => new Date(value).toLocaleTimeString(document.documentElement.lang, { hour: "2-digit", minute: "2-digit" })
+                    },
+                    grid: { color: "#252a31" }
+                },
                 y: { ticks: { color: "#9ca3af" }, grid: { color: "#252a31" }, suggestedMin: 20, suggestedMax: 80 }
             },
             plugins: {
@@ -451,6 +467,7 @@ function initTemperatureChart() {
             }
         }
     });
+    setChartTimeRange(app.chartTimeRangeIndex);
 }
 
 function appendTemperaturePoint(telemetry) {
@@ -458,24 +475,39 @@ function appendTemperaturePoint(telemetry) {
         return;
     }
 
-    const labels = app.tempChart.data.labels;
     const chamber = app.tempChart.data.datasets[0].data;
     const cpu = app.tempChart.data.datasets[1].data;
     const bay = app.tempChart.data.datasets[2].data;
+    const now = Date.now();
+    const oldestAllowed = now - CHART_MAX_HISTORY_MS;
 
-    labels.push(new Date().toLocaleTimeString(document.documentElement.lang, { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-    chamber.push(telemetry.currentTemp);
-    cpu.push(telemetry.cpuTemp);
-    bay.push(telemetry.electronicsTemp);
+    chamber.push({ x: now, y: telemetry.currentTemp });
+    cpu.push({ x: now, y: telemetry.cpuTemp });
+    bay.push({ x: now, y: telemetry.electronicsTemp });
 
-    if (labels.length > 20) {
-        labels.shift();
-        chamber.shift();
-        cpu.shift();
-        bay.shift();
-    }
+    [chamber, cpu, bay].forEach((series) => {
+        while (series.length && series[0].x < oldestAllowed) series.shift();
+    });
 
+    updateChartTimeBounds(now);
     app.tempChart.update("none");
+}
+
+function setChartTimeRange(index) {
+    app.chartTimeRangeIndex = Math.max(0, Math.min(CHART_TIME_RANGES_MINUTES.length - 1, index));
+    const minutes = CHART_TIME_RANGES_MINUTES[app.chartTimeRangeIndex];
+    els.chartTimeRange.textContent = `${minutes} ${app.t("ui.minutes", "min")}`;
+    els.chartTimeShorter.disabled = app.chartTimeRangeIndex === 0;
+    els.chartTimeLonger.disabled = app.chartTimeRangeIndex === CHART_TIME_RANGES_MINUTES.length - 1;
+    updateChartTimeBounds();
+    app.tempChart?.update("none");
+}
+
+function updateChartTimeBounds(now = Date.now()) {
+    if (!app.tempChart) return;
+    const minutes = CHART_TIME_RANGES_MINUTES[app.chartTimeRangeIndex];
+    app.tempChart.options.scales.x.min = now - minutes * 60 * 1000;
+    app.tempChart.options.scales.x.max = now;
 }
 
 function detectDiagnostics(telemetry, snapshot) {

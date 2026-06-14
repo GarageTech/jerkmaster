@@ -156,6 +156,8 @@ the same commit.
 
 ### Changed
 
+- Placed the `Active profile` label above the active profile name.
+- Changed the temperature chart to a minute-based time axis with selectable 5, 15, 30, and 60 minute ranges.
 - Made Klipper `DRYER_STATE` the only authoritative source for real drying-state restoration.
 - Added the active recipe and final result to `DRYER_STATE` so browser reopening restores the exact running process without browser-side guesses.
 - Synchronized the dashboard timer to Klipper elapsed time on every telemetry update.

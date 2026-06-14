@@ -500,6 +500,43 @@ button.card-header {
     color: var(--jm-warning);
 }
 
+.chart-time-scale {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    margin-left: auto;
+    color: var(--jm-text-muted);
+    font-size: .75rem;
+}
+
+.chart-time-scale button {
+    display: inline-grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--jm-border);
+    border-radius: 4px;
+    color: var(--jm-text-muted);
+    background: #111418;
+}
+
+.chart-time-scale button:hover:not(:disabled) {
+    color: var(--jm-accent);
+    border-color: var(--jm-accent);
+}
+
+.chart-time-scale button:disabled {
+    opacity: .3;
+}
+
+.chart-time-scale strong {
+    min-width: 3.8rem;
+    color: var(--jm-text);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
 .ingredient-name {
     display: inline-flex;
     align-items: center;
@@ -628,10 +665,10 @@ input[type="number"] {
 }
 
 .compact-profile {
-    display: flex;
+    display: grid;
     min-width: 140px;
-    align-items: center;
-    gap: .45rem;
+    align-content: center;
+    gap: .2rem;
     padding: .35rem 0;
 }
 

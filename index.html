@@ -284,6 +284,11 @@
             <span class="chart-legend-item chamber"><i></i><span data-i18n="ui.chamber">Камера</span> <strong id="chart-chamber-temp">--.-°C</strong><span class="chart-target-value"><span data-i18n="ui.target">Цель</span> <strong id="chart-target-temp">--.-°C</strong></span></span>
             <span class="chart-legend-item cpu"><i></i><span data-i18n="ui.raspberry_pi">Raspberry Pi</span> <strong id="chart-cpu-temp">--.-°C</strong></span>
             <span class="chart-legend-item bay"><i></i><span data-i18n="ui.electronics_bay">Electronic Bay</span> <strong id="chart-bay-temp">--.-°C</strong></span>
+            <span class="chart-time-scale">
+                <button id="chart-time-shorter" type="button" aria-label="Shorter time range"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                <strong id="chart-time-range">15 min</strong>
+                <button id="chart-time-longer" type="button" aria-label="Longer time range"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            </span>
         </div>
         <div class="card-body chart-container collapsible-content">
             <canvas id="temp-chart" height="120"></canvas>
