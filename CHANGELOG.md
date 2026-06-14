@@ -156,6 +156,8 @@ the same commit.
 
 ### Changed
 
+- Moved user-created and edited ingredients, recipes, and profiles from browser local storage to persistent Raspberry Pi user-data files shared by every browser.
+- Added an atomic Raspberry user-data API and documented backup of `/var/lib/jerkmaster/user-data/`; existing browser-local edits are intentionally not migrated.
 - Added a credential-free Raspberry Pi updater that installs the public `main` archive without Git or a GitHub account.
 - Audited all interface translations and CSS, and removed obsolete diagnostic-status styles.
 - Fixed mobile navigation and ingredient-toolbar overflow found during the CSS audit.

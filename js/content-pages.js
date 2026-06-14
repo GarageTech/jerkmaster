@@ -108,9 +108,13 @@ async function setupIngredientEncyclopedia(locale, t) {
         }
         const name = getIngredientName(ingredient, locale, titleize(id));
         if (!window.confirm(t("encyclopedia.delete_confirm", "Delete {name}?").replace("{name}", name))) return;
-        deleteIngredient(id);
-        await refresh();
-        showMessage("success", t("encyclopedia.deleted", "Ingredient deleted"));
+        try {
+            await deleteIngredient(id);
+            await refresh();
+            showMessage("success", t("encyclopedia.deleted", "Ingredient deleted"));
+        } catch (error) {
+            showMessage("danger", error.message);
+        }
     };
 
     const showMessage = (level, text) => {
@@ -123,22 +127,26 @@ async function setupIngredientEncyclopedia(locale, t) {
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const id = idInput.value.trim().toLowerCase();
-        const originalId = originalIdInput.value;
-        if (!originalId && ingredients[id]) {
-            showMessage("danger", t("encyclopedia.id_exists", "An ingredient with this ID already exists"));
-            return;
+        try {
+            const id = idInput.value.trim().toLowerCase();
+            const originalId = originalIdInput.value;
+            if (!originalId && ingredients[id]) {
+                showMessage("danger", t("encyclopedia.id_exists", "An ingredient with this ID already exists"));
+                return;
+            }
+            const ingredient = {
+                category: categoryInput.value,
+                default_unit: unitInput.value.trim(),
+                names: Object.fromEntries(LOCALES.map((language) => [language, form.elements[`name_${language}`].value.trim()])),
+                descriptions: Object.fromEntries(LOCALES.map((language) => [language, form.elements[`description_${language}`].value.trim()]))
+            };
+            await saveIngredient(id, ingredient, Boolean(originalId));
+            dialog.close();
+            await refresh();
+            showMessage("success", t("encyclopedia.saved", "Ingredient saved"));
+        } catch (error) {
+            showMessage("danger", error.message);
         }
-        const ingredient = {
-            category: categoryInput.value,
-            default_unit: unitInput.value.trim(),
-            names: Object.fromEntries(LOCALES.map((language) => [language, form.elements[`name_${language}`].value.trim()])),
-            descriptions: Object.fromEntries(LOCALES.map((language) => [language, form.elements[`description_${language}`].value.trim()]))
-        };
-        saveIngredient(id, ingredient, Boolean(originalId));
-        dialog.close();
-        await refresh();
-        showMessage("success", t("encyclopedia.saved", "Ingredient saved"));
     });
     filter.addEventListener("change", render);
     document.querySelector("#add-ingredient-btn").addEventListener("click", () => openEditor());

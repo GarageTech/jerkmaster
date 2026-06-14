@@ -64,14 +64,18 @@ VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentione
 | Moonraker | HTTP API between the browser and Klipper |
 | Klipper | Heater/fan control, sensors, safety limits, and non-blocking drying macros |
 | Klipper `DRYER_STATE` | Authoritative active recipe, profile, stage, settings, and elapsed time |
-| Browser local storage | User-created and edited ingredients, recipes, profiles, and language preference |
+| Raspberry user-data files | User-created and edited ingredients, recipes, and profiles shared by every browser |
+| Browser local storage | Language preference for that browser |
 | JSON files | Default ingredients, recipes, profiles, categories, and translations |
 
 The UI is plain HTML, CSS, and JavaScript served on the Raspberry Pi by
 `jerkmaster.service`. The service disables browser caching and exposes `/health`
-for installation checks. Default project data remains in the repository; user
-edits are stored in the browser. Active drying state is never restored from
-browser storage; Klipper is the only source of truth.
+for installation checks. Default project data remains in the repository. User
+edits are stored separately in `/var/lib/jerkmaster/user-data/`, survive
+interface updates, and are shared by every browser connected to the Raspberry
+Pi. Existing browser-local catalog changes are intentionally not migrated.
+Active drying state is never restored from browser storage; Klipper is the only
+source of truth.
 
 ### Software Stack
 

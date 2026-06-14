@@ -51,6 +51,7 @@ ExecStart=/usr/bin/python3 ${INSTALL_DIR}/raspberry-server.py --port ${PORT} --d
 Restart=on-failure
 RestartSec=3
 DynamicUser=yes
+StateDirectory=jerkmaster
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectHome=yes

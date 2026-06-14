@@ -72,9 +72,13 @@ async function setupRecipes() {
             return;
         }
         if (!window.confirm(t("recipes.delete_confirm", "Delete {name}?").replace("{name}", getRecipeName(recipe, locale, recipe.id)))) return;
-        deleteRecipe(recipe.id);
-        await refresh();
-        message("success", t("recipes.deleted", "Recipe deleted"));
+        try {
+            await deleteRecipe(recipe.id);
+            await refresh();
+            message("success", t("recipes.deleted", "Recipe deleted"));
+        } catch (error) {
+            message("danger", error.message);
+        }
     };
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -88,7 +92,7 @@ async function setupRecipes() {
             [...Object.keys(dryMix), ...Object.keys(marinade)].forEach((ingredientId) => {
                 if (!ingredients[ingredientId]) throw new Error(`${t("recipes.unknown_ingredient", "Unknown ingredient")}: ${ingredientId}`);
             });
-            saveRecipe(id, {
+            await saveRecipe(id, {
                 id, profile: profileInput.value, dry_mix: dryMix, dry_mix_usage_per_kg: dryMixUsage, marinade,
                 names: values(form, "name"), descriptions: values(form, "description")
             }, Boolean(originalInput.value));
@@ -149,9 +153,13 @@ async function setupProfiles() {
             return;
         }
         if (!window.confirm(t("profiles.delete_confirm", "Delete {name}?").replace("{name}", getProfileName(profile, locale, id)))) return;
-        deleteProfile(id);
-        await refresh();
-        message("success", t("profiles.deleted", "Profile deleted"));
+        try {
+            await deleteProfile(id);
+            await refresh();
+            message("success", t("profiles.deleted", "Profile deleted"));
+        } catch (error) {
+            message("danger", error.message);
+        }
     };
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -160,7 +168,7 @@ async function setupProfiles() {
             if (!originalInput.value && profiles[id]) throw new Error(t("profiles.id_exists", "A profile with this ID already exists"));
             const stages = JSON.parse(stagesInput.value);
             if (!Array.isArray(stages) || !stages.length || stages.some((stage) => !validStage(stage))) throw new Error(t("profiles.invalid_stages", "Every stage requires valid temp, minutes and fan values"));
-            saveProfile(id, { stages, names: values(form, "name") }, Boolean(originalInput.value));
+            await saveProfile(id, { stages, names: values(form, "name") }, Boolean(originalInput.value));
             dialog.close();
             await refresh();
             message("success", t("profiles.saved", "Profile saved"));

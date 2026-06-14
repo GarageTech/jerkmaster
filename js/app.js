@@ -97,7 +97,6 @@ async function init() {
 
     app.t = t;
     app.data = data;
-    localStorage.removeItem("jerkmaster-active-drying");
     await app.moonraker.refreshTelemetry?.();
     const activeDrying = resolveActiveDrying(app.moonraker.getTelemetry(), app.data);
     app.selectedRecipe = data.recipes.find((recipe) => recipe.id === activeDrying?.recipeId) ?? data.recipes[0];

@@ -48,6 +48,16 @@ installs the current macros, copies the interface to `/opt/jerkmaster`, installs
 `jerkmaster.service`, and starts it automatically at boot. It removes its
 temporary files when finished. Run the same commands for future updates.
 
+User-created and edited ingredients, recipes, and profiles are stored separately
+in `/var/lib/jerkmaster/user-data/`. This directory survives interface updates
+and is shared by every browser. Back it up with:
+
+```bash
+sudo tar -czf ~/jerkmaster-user-data-backup.tar.gz -C /var/lib/jerkmaster user-data
+```
+
+Existing edits previously stored in a browser's local storage are not migrated.
+
 Review changes to `printer.cfg`, `hardware.cfg`, and `moonraker.conf` before
 copying or merging them, because the updater intentionally leaves these
 machine-specific serial, pin, and network settings unchanged. Run `RESTART`
@@ -75,6 +85,7 @@ sudo systemctl status jerkmaster
 sudo systemctl restart jerkmaster
 sudo journalctl -u jerkmaster -f
 curl -fsS http://127.0.0.1:8080/health
+curl -fsS http://127.0.0.1:8080/api/user-data/recipes
 ```
 
 If `jerkmaster.local` does not resolve, verify the Raspberry Pi hostname with

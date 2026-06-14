@@ -1,8 +1,8 @@
-const STORAGE_KEY = "jerkmaster-ingredient-changes";
+import { readUserChanges, writeUserChanges } from "./user-data-store.js";
 
 export async function loadIngredientCatalog() {
     const baseIngredients = await readJson("data/ingredients.json");
-    const changes = readChanges();
+    const changes = await readUserChanges("ingredients");
     const ingredients = {};
 
     Object.entries(baseIngredients).forEach(([id, ingredient]) => {
@@ -17,8 +17,8 @@ export async function loadIngredientCatalog() {
     return ingredients;
 }
 
-export function saveIngredient(id, ingredient, isExisting) {
-    const changes = readChanges();
+export async function saveIngredient(id, ingredient, isExisting) {
+    const changes = await readUserChanges("ingredients");
 
     if (isExisting && !changes.added[id]) {
         changes.updated[id] = ingredient;
@@ -27,11 +27,11 @@ export function saveIngredient(id, ingredient, isExisting) {
         delete changes.updated[id];
     }
     changes.deleted = changes.deleted.filter((deletedId) => deletedId !== id);
-    writeChanges(changes);
+    await writeUserChanges("ingredients", changes);
 }
 
-export function deleteIngredient(id) {
-    const changes = readChanges();
+export async function deleteIngredient(id) {
+    const changes = await readUserChanges("ingredients");
 
     if (changes.added[id]) {
         delete changes.added[id];
@@ -39,7 +39,7 @@ export function deleteIngredient(id) {
     } else if (!changes.deleted.includes(id)) {
         changes.deleted.push(id);
     }
-    writeChanges(changes);
+    await writeUserChanges("ingredients", changes);
 }
 
 export function getIngredientName(ingredient, locale, fallback) {
@@ -58,23 +58,6 @@ function mergeIngredient(id, base, override = {}) {
         names: { ...(base.names ?? {}), ...(override.names ?? {}) },
         descriptions: { ...(base.descriptions ?? {}), ...(override.descriptions ?? {}) }
     };
-}
-
-function readChanges() {
-    try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-        return {
-            added: saved.added ?? {},
-            updated: saved.updated ?? {},
-            deleted: Array.isArray(saved.deleted) ? saved.deleted : []
-        };
-    } catch {
-        return { added: {}, updated: {}, deleted: [] };
-    }
-}
-
-function writeChanges(changes) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(changes));
 }
 
 async function readJson(path) {
