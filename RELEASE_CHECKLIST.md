@@ -2,8 +2,10 @@
 
 ## Repository
 
-- [ ] Confirm the repository URL is `https://github.com/GarageTech/jerkmaster`
-- [ ] Use `main` as the default branch
+- [x] Confirm the repository URL is `https://github.com/GarageTech/jerkmaster`
+- [x] Use `main` as the default branch
+- [ ] Confirm no passwords, API keys, SSH keys, personal configs, exact local IPs, or device serials exist in files or Git history
+- [ ] Make the repository public only after the secret/history audit is clean
 - [ ] Add a short GitHub repository description
 - [ ] Add topics such as `dehydrator`, `jerky`, `klipper`, `moonraker`, `raspberry-pi`, `btt-skr`, and `food-drying`
 - [ ] Enable private vulnerability reporting

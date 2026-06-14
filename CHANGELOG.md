@@ -1,8 +1,9 @@
 # Changelog
 
-This file records the project history in chronological commit order. New functional,
-hardware, interface, documentation, and safety changes must be added here as part of
-the same commit.
+This file records the project history in chronological order. New functional,
+hardware, interface, documentation, and safety changes must be added here as
+part of the same commit. Commit hashes are intentionally omitted so a future
+security-related history rewrite does not leave links to superseded commits.
 
 ## 2026-06-10
 
@@ -156,6 +157,10 @@ the same commit.
 
 ### Changed
 
+- Added `0.1.0-alpha` current-status and known-issues sections to the main README.
+- Expanded `.gitignore` for Wi-Fi credentials, Moonraker secrets, API keys, SSH keys, certificates, personal configs, user data, and backups.
+- Replaced the reference-build MCU serial and exact local IP example with public-safe placeholders.
+- Removed historical commit-hash links before the public repository history scrub.
 - Moved user-created and edited ingredients, recipes, and profiles from browser local storage to persistent Raspberry Pi user-data files shared by every browser.
 - Added an atomic Raspberry user-data API and documented backup of `/var/lib/jerkmaster/user-data/`; existing browser-local edits are intentionally not migrated.
 - Added a credential-free Raspberry Pi updater that installs the public `main` archive without Git or a GitHub account.

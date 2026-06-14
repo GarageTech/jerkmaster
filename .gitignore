@@ -12,3 +12,43 @@ node_modules/
 .idea/
 
 tmp/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.local
+*.local.*
+*.secret
+*.secrets
+secrets.*
+credentials.*
+
+# Personal Klipper, Moonraker, and device configuration
+klipper/printer.local.cfg
+klipper/hardware.local.cfg
+klipper/moonraker.local.conf
+klipper/secrets.conf
+klipper/moonraker-secrets.conf
+printer_data/
+user-data/
+
+# Wi-Fi, SSH, VPN, certificates, and private keys
+wpa_supplicant.conf
+wifi*.conf
+id_rsa*
+id_ed25519*
+known_hosts
+authorized_keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.ovpn
+
+# Backups and exported personal configuration
+*.bak
+*.backup
+*.orig
+*.swp
+*~

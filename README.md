@@ -19,6 +19,32 @@
 
 # About JerkMaster
 
+## Current Status
+
+The project is functional but under active development.
+
+| Item | Status |
+|---|---|
+| Version | `0.1.0-alpha` |
+| Hardware | Tested |
+| Software | Tested |
+| First production drying run | Completed |
+| Repository visibility | Public |
+| Release | `v0.1.0-alpha` |
+
+`VERSION = 0.1.0`
+
+## Known Issues
+
+- Browser reconnect and active-process state restoration remain under active
+  development and require more long-running failure testing.
+- Local round-display software is implemented, but the new front-panel display
+  hardware is not yet installed.
+- Power-management integration with the BTT Power Shutdown Relay V1.2 is
+  experimental and must not be used as a safety disconnect.
+- Installation still requires adapting local MCU serial, network, Moonraker,
+  and hardware configuration values.
+
 Jerky is one of the oldest and most practical ways of preserving meat. By removing most of the moisture, the product becomes lightweight, shelf-stable, rich in flavor, and highly concentrated in protein.
 
 Today jerky is often associated with a snack for beer, but in reality it can be much more than that. It is a convenient high-protein snack during the workday, a practical source of nutrition on long trips, and a staple food for hikers, campers, hunters, and anyone who values lightweight, compact, and nutritious food. Properly prepared jerky stores well, requires no refrigeration, and delivers a remarkable amount of protein in a very small package.
