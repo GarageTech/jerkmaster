@@ -49,22 +49,29 @@ Use suitable crimp terminals and a proper crimping tool. Do not crimp electrical
 
 This is not a low-voltage toy project. Treat it like real electrical equipment.
 
-## Original Control Panel
+## New Front Panel
 
-At the moment, the original front control panel remains installed and untouched.
+The planned front panel replaces the original controls with two centered round
+status displays, two continuously powered Noctua cooling fans, and one
+momentary 12 V RGB push button.
 
-The factory touch buttons and display are no longer used for controlling the drying process, but removing the panel offered little practical benefit during the initial stages of development. Leaving it in place also preserves the original appearance of the dehydrator and avoids creating unnecessary openings in the front panel.
+![JerkMaster front-panel concept](../img/docs/illustrations/front-panel-concept.png)
 
-The current JerkMaster interface is entirely web-based and accessed through Moonraker and the custom web UI.
+The two fans sit on either side of the displays and provide a direct airflow path
+through the electronics bay. They are not software-controlled: whenever the
+electronics power supply is on, both fans run. This avoids making controller
+cooling dependent on firmware, GPIO state, or a temperature rule.
 
-However, the front panel area remains an interesting location for future upgrades. One possible direction is replacing the original display with a small dedicated status screen that could show information such as:
+The momentary button is used to request power through a BTT Power Shutdown Relay
+V1.2. Its switch contacts and RGB LED are electrically separate:
 
-- Current temperature
-- Target temperature
-- Active drying stage
-- Remaining time
-- System status
+- the momentary switch contacts connect only to the relay module's button input;
+- the relay module receives mains input continuously and switches the downstream
+  electronics supply;
+- the blue LED channel is driven from 12 V through the free SKR BED MOSFET
+  output;
+- the unused LED channels are left disconnected and insulated.
 
-This would provide basic local monitoring without requiring a phone, tablet or computer.
-
-For now, the original panel remains part of the appliance and serves as a reminder of where the project started.
+The button is a normal power-control interface, not an emergency stop. It must
+not replace the physical E-stop, independent thermal fuse, breaker, protective
+earth, or a correctly rated safety contactor where one is required.

@@ -46,6 +46,8 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 
 - Mean Well RS-25-5
 - Mean Well LRS-150-12
+- BTT Power Shutdown Relay V1.2 for normal electronics power control
+- 12 V momentary RGB push button with separate switch and LED terminals
 
 ## Load Switching
 
@@ -63,6 +65,11 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 ## Cooling
 
 - Waveshare PI-FAN-3007 or equivalent Raspberry Pi cooling
+- Two Noctua front-panel fans, powered continuously with the electronics
+
+Select the 5 V or 12 V Noctua model to match the chosen supply rail. Do not
+connect a 5 V fan to 12 V. Fuse the fan branch and verify the combined starting
+current before wiring both fans to one supply output.
 
 ## AC Distribution
 - Weco 3070-PCM/03-5.033 wecoconnectors.com
