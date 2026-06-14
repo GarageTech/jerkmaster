@@ -111,7 +111,7 @@ Use `?lang=en`, `?lang=ru`, or `?lang=ua` to choose a language.
 1. Read [the installation guide](installation.md).
 2. Review [the hardware list](hardware.md) and [wiring notes](wiring.md).
 3. Copy and adapt the files from `../klipper/`.
-4. Run `tools/install-raspberry-pi.sh` on the Raspberry Pi to install and start the UI.
+4. Use the credential-free public archive updater from the [installation guide](installation.md) to install and start the UI.
 5. Verify every pin, sensor type, temperature limit, and electrical protection device.
 6. Test with mains-powered loads physically disconnected.
 7. Connect the UI to Moonraker only after the controller is operating safely.

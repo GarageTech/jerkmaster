@@ -26,8 +26,9 @@ Thank you for helping improve JerkMaster.
 ## Testing On Raspberry Pi
 
 ```bash
-cd ~/jerkmaster
-sudo ./tools/install-raspberry-pi.sh
+curl -fsSL https://raw.githubusercontent.com/GarageTech/jerkmaster/main/tools/update-raspberry-pi.sh -o /tmp/update-jerkmaster.sh
+chmod +x /tmp/update-jerkmaster.sh
+/tmp/update-jerkmaster.sh
 ```
 
 Open `http://jerkmaster.local:8080/?demo=1`.

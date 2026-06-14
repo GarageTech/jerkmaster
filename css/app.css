@@ -35,12 +35,14 @@ body {
 
 .header-actions {
     display: flex;
+    min-width: 0;
     align-items: center;
     gap: .5rem;
 }
 
 .page-nav {
     display: flex;
+    min-width: 0;
     gap: .2rem;
     padding: .25rem;
     border: 1px solid var(--jm-border);
@@ -161,40 +163,6 @@ button.card-header {
 
 .status-strip #chamber-light-btn {
     justify-self: end;
-}
-
-.diagnostic-statuses {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: .3rem;
-}
-
-.diagnostic-status {
-    padding: .32rem .5rem;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    font-size: .72rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.diagnostic-status.normal {
-    color: #9ff0b3;
-    background: #16351f;
-    border-color: rgba(34, 197, 94, .35);
-}
-
-.diagnostic-status.warning {
-    color: #fbd38d;
-    background: #3b2b13;
-    border-color: rgba(245, 158, 11, .45);
-}
-
-.diagnostic-status.danger {
-    color: #fecaca;
-    background: #451a1a;
-    border-color: rgba(239, 68, 68, .5);
 }
 
 .big-value {
@@ -885,6 +853,8 @@ input[type="number"] {
     }
 
     .page-nav {
+        flex: 1 0 100%;
+        max-width: 100%;
         width: 100%;
         overflow-x: auto;
     }
@@ -895,6 +865,19 @@ input[type="number"] {
     }
 
     .header-actions .btn {
+        flex: 1;
+    }
+
+    .ingredient-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .category-filter {
+        max-width: none;
+        flex: 1 1 100%;
+    }
+
+    .ingredient-toolbar .btn {
         flex: 1;
     }
 

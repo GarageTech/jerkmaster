@@ -23,8 +23,8 @@ the local network open the Raspberry-hosted interface.
 
 1. Install MainsailOS on the Raspberry Pi.
 2. Build Klipper firmware for the `LPC1769` used by the BTT SKR 1.4 Turbo and flash the board.
-3. Clone or copy this repository to `~/jerkmaster` on the Raspberry Pi.
-4. Copy the contents of `~/jerkmaster/klipper/` to `~/printer_data/config/`.
+3. Download the public repository archive or copy the project to the Raspberry Pi.
+4. Copy and adapt the contents of `klipper/` to `~/printer_data/config/`.
 5. Run `ls /dev/serial/by-id/*` and place the correct result in the `[mcu]` section of `printer.cfg`.
 6. Verify and adapt every pin, sensor type, temperature limit, and safety setting in `hardware.cfg`.
 7. Copy examples from `klipper/gcodes/` to `~/printer_data/gcodes/`.
@@ -32,34 +32,32 @@ the local network open the Raspberry-hosted interface.
 9. Restart Moonraker with `sudo systemctl restart moonraker`.
 10. Run `RESTART` in the Klipper console and inspect `~/printer_data/logs/klippy.log`.
 
-## 2. Install Or Update The Web Interface
+## 2. Install Or Update JerkMaster
 
-Run the installer from the repository on the Raspberry Pi:
-
-```bash
-cd ~/jerkmaster
-chmod +x tools/install-raspberry-pi.sh
-sudo ./tools/install-raspberry-pi.sh
-```
-
-The installer copies the interface to `/opt/jerkmaster`, installs
-`jerkmaster.service`, and starts it automatically at boot. Run the same command
-after every repository update. The Raspberry-only web service disables browser
-caching so interface changes appear immediately after an update.
-
-For an existing installation, update the repository and the active drying macros
-before reinstalling the interface:
+The recommended update command downloads the public `main` archive. It does not
+use Git, require a GitHub account, or ask for a repository password:
 
 ```bash
-cd ~/jerkmaster
-git pull --ff-only
-cp klipper/macros.cfg ~/printer_data/config/macros.cfg
-sudo ./tools/install-raspberry-pi.sh
+curl -fsSL https://raw.githubusercontent.com/GarageTech/jerkmaster/main/tools/update-raspberry-pi.sh -o /tmp/update-jerkmaster.sh
+chmod +x /tmp/update-jerkmaster.sh
+/tmp/update-jerkmaster.sh
 ```
+
+The updater downloads a temporary ZIP archive, backs up the active `macros.cfg`,
+installs the current macros, copies the interface to `/opt/jerkmaster`, installs
+`jerkmaster.service`, and starts it automatically at boot. It removes its
+temporary files when finished. Run the same commands for future updates.
 
 Review changes to `printer.cfg`, `hardware.cfg`, and `moonraker.conf` before
-copying or merging them, because these files contain machine-specific serial,
-pin, and network settings. Run `RESTART` after updating Klipper configuration.
+copying or merging them, because the updater intentionally leaves these
+machine-specific serial, pin, and network settings unchanged. Run `RESTART`
+after updating Klipper configuration.
+
+Developers working from a local repository checkout may still run:
+
+```bash
+sudo ./tools/install-raspberry-pi.sh
+```
 
 Open the interface using the Raspberry Pi hostname:
 
@@ -143,13 +141,12 @@ install the service:
 sudo raspi-config nonint do_spi 0
 sudo reboot
 
-cd ~/jerkmaster
-chmod +x tools/install-displays.sh
-sudo ./tools/install-displays.sh
+JERKMASTER_INSTALL_DISPLAYS=1 /tmp/update-jerkmaster.sh
 ```
 
 The default GPIO assignments and Moonraker URL are stored in
-`/opt/jerkmaster-displays/config.json`.
+`/opt/jerkmaster-displays/config.json`. Future runs of the standard updater
+automatically update an already-installed display service.
 
 Do not expose JerkMaster or Moonraker directly to the public internet. Use a
 trusted LAN or VPN.

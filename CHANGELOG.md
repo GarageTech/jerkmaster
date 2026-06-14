@@ -156,6 +156,10 @@ the same commit.
 
 ### Changed
 
+- Added a credential-free Raspberry Pi updater that installs the public `main` archive without Git or a GitHub account.
+- Audited all interface translations and CSS, and removed obsolete diagnostic-status styles.
+- Fixed mobile navigation and ingredient-toolbar overflow found during the CSS audit.
+- Refreshed the About-page dashboard screenshot.
 - Added live heater and fan PWM percentages to the controller status row.
 - Placed the `Active profile` label above the active profile name.
 - Changed the temperature chart to a minute-based time axis with selectable 5, 15, 30, and 60 minute ranges.
@@ -180,6 +184,7 @@ the same commit.
 
 ### Documentation
 
+- Replaced password-prone `git pull` update instructions with the public archive updater.
 - Reconstructed the complete project changelog in chronological commit order with links to all existing commits.
 - Added contributor and agent rules requiring `CHANGELOG.md` updates with future project changes.
 - Reworked installation and technical documentation around a single Raspberry Pi deployment.
