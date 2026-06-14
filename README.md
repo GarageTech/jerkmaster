@@ -19,6 +19,10 @@
 
 # About JerkMaster
 
+[![Watch the JerkMaster project video](img/docs/screenshots/dashboard.png)](https://youtu.be/LMud8d1dsIs)
+
+[Watch the JerkMaster project video on YouTube](https://youtu.be/LMud8d1dsIs)
+
 ## Current Status
 
 The project is functional but under active development.

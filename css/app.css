@@ -402,13 +402,22 @@ button.card-header {
     font-weight: 700;
 }
 
-.media-placeholder {
-    display: grid;
-    min-height: 220px;
-    place-items: center;
-    border: 1px dashed var(--jm-border-hover);
+.video-frame {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--jm-border);
     border-radius: 8px;
-    color: var(--jm-text-muted);
+    background: #000;
+}
+
+.video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
 }
 
 .salinity-result {

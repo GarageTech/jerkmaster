@@ -45,6 +45,11 @@ authorized_keys
 *.p12
 *.pfx
 *.ovpn
+*.sfk
+
+# Local source videos; published documentation links to YouTube versions
+img/docs/Untitled.mp4
+img/docs/dji_mimo_*_video.mp4
 
 # Backups and exported personal configuration
 *.bak
