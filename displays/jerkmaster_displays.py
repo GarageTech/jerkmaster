@@ -486,42 +486,149 @@ def render_beer_glass(draw, progress, animation_time):
             draw.ellipse((x - radius, y - radius, x + radius, y + radius), outline="#fff7d6", width=2)
 
 
-def render_blackjack(side, animation_time, scene_duration=10.0):
+class BlackjackGame:
+    def __init__(self):
+        self.randomizer = random.Random()
+        self.reset()
+
+    def reset(self):
+        self.active = False
+        self.phase = "idle"
+        self.deck = []
+        self.player = []
+        self.dealer = []
+        self.last_action = 0.0
+        self.dealer_step = 0.0
+        self.result_started = 0.0
+        self.result = ""
+
+    def start(self, now):
+        suits = ("heart", "spade", "heart", "spade")
+        ranks = ("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K")
+        self.deck = [(rank, suit) for suit in suits for rank in ranks]
+        self.randomizer.shuffle(self.deck)
+        self.player = [self.deck.pop(), self.deck.pop()]
+        self.dealer = [self.deck.pop(), self.deck.pop()]
+        self.active = True
+        self.phase = "player"
+        self.last_action = now
+        self.result = ""
+        if hand_value(self.player) == 21:
+            self.stand(now)
+
+    def press(self, now):
+        if not self.active:
+            self.start(now)
+        elif self.phase == "player":
+            self.player.append(self.deck.pop())
+            self.last_action = now
+            if hand_value(self.player) >= 21:
+                self.stand(now)
+
+    def stand(self, now):
+        if hand_value(self.player) > 21:
+            self.finish(now)
+            return
+        self.phase = "dealer"
+        self.dealer_step = now + 0.7
+
+    def update(self, now, stand_timeout, result_duration):
+        if not self.active:
+            return
+        if self.phase == "player" and now - self.last_action >= stand_timeout:
+            self.stand(now)
+        elif self.phase == "dealer" and now >= self.dealer_step:
+            if hand_value(self.dealer) < 17:
+                self.dealer.append(self.deck.pop())
+                self.dealer_step = now + 0.7
+            else:
+                self.finish(now)
+        elif self.phase == "result" and now - self.result_started >= result_duration:
+            self.reset()
+
+    def finish(self, now):
+        player_value = hand_value(self.player)
+        dealer_value = hand_value(self.dealer)
+        if player_value > 21:
+            self.result = "BUST"
+        elif dealer_value > 21 or player_value > dealer_value:
+            self.result = "YOU WIN"
+        elif player_value < dealer_value:
+            self.result = "DEALER WINS"
+        else:
+            self.result = "PUSH"
+        self.phase = "result"
+        self.result_started = now
+
+
+def hand_value(cards):
+    value = 0
+    aces = 0
+    for rank, _ in cards:
+        if rank == "A":
+            aces += 1
+            value += 11
+        elif rank in ("J", "Q", "K"):
+            value += 10
+        else:
+            value += int(rank)
+    while value > 21 and aces:
+        value -= 10
+        aces -= 1
+    return value
+
+
+def render_blackjack_game(side, game, now, stand_timeout):
     image = Image.new("RGB", (WIDTH, HEIGHT), "#06150e")
     draw = ImageDraw.Draw(image)
     draw.arc((8, 8, 232, 232), 0, 359, fill="#166534", width=8)
     draw.ellipse((28, 28, 212, 212), outline="#14532d", width=3)
 
-    deal_progress = smooth_step(min(1.0, animation_time / 1.6))
-    card_x = int((-105 if side == "left" else 245) + (117 - (-105 if side == "left" else 245)) * deal_progress)
-    rank = "A" if side == "left" else "K"
-    suit = "spade" if side == "left" else "heart"
-    render_playing_card(draw, card_x, 111, rank, suit)
+    is_player = side == "left"
+    cards = game.player if is_player else game.dealer
+    hidden_dealer_card = not is_player and game.phase == "player"
+    label = "PLAYER" if is_player else "DEALER"
+    centered(draw, (120, 27), label, FONTS["label"], CYAN if is_player else AMBER)
+    render_blackjack_hand(draw, cards, hidden_dealer_card)
 
-    if animation_time >= 1.8:
-        label_progress = smooth_step(min(1.0, (animation_time - 1.8) / 0.8))
-        label = "BLACK" if side == "left" else "JACK"
-        centered(draw, (120, 34), label, FONTS["medium"], mix_color("#06150e", AMBER, label_progress))
-        centered(draw, (120, 211), "21", FONTS["medium"], mix_color("#06150e", WHITE, label_progress))
-
-    if animation_time >= 2.5:
-        render_casino_sparkles(draw, side, animation_time)
-    if animation_time >= scene_duration - 1.3:
-        flash = 0.45 + 0.55 * abs(math.sin(animation_time * math.tau * 2))
-        draw.arc((8, 8, 232, 232), 0, 359, fill=mix_color("#166534", AMBER, flash), width=8)
+    visible_cards = cards[:1] if hidden_dealer_card else cards
+    centered(draw, (120, 184), str(hand_value(visible_cards)), FONTS["medium"], WHITE)
+    if is_player and game.phase == "player":
+        remaining = max(0, math.ceil(stand_timeout - (now - game.last_action)))
+        centered(draw, (120, 210), f"HIT  {remaining}", FONTS["small"], AMBER)
+    elif game.phase == "dealer":
+        centered(draw, (120, 210), "DEALING", FONTS["small"], AMBER)
+    elif game.phase == "result":
+        result_color = GREEN if game.result == "YOU WIN" else AMBER if game.result == "PUSH" else RED
+        centered(draw, (120, 210), game.result, FONTS["small"], result_color)
+        render_casino_sparkles(draw, side, now)
     return image
 
 
-def render_playing_card(draw, center_x, center_y, rank, suit):
-    box = (center_x - 54, center_y - 72, center_x + 54, center_y + 72)
+def render_blackjack_hand(draw, cards, hide_second=False):
+    count = len(cards)
+    spacing = 42 if count <= 3 else 31
+    start_x = 120 - spacing * (count - 1) / 2
+    for index, (rank, suit) in enumerate(cards):
+        center_x = int(start_x + index * spacing)
+        render_playing_card(draw, center_x, 101, rank, suit, hidden=hide_second and index == 1)
+
+
+def render_playing_card(draw, center_x, center_y, rank, suit, hidden=False):
+    box = (center_x - 31, center_y - 48, center_x + 31, center_y + 48)
+    if hidden:
+        draw.rounded_rectangle(box, radius=8, fill="#1d4ed8", outline="#dbeafe", width=3)
+        for y in range(box[1] + 8, box[3] - 4, 10):
+            draw.line((box[0] + 7, y, box[2] - 7, y), fill="#93c5fd", width=2)
+        return
     draw.rounded_rectangle(box, radius=12, fill="#f8fafc", outline="#d1d5db", width=3)
     color = RED if suit == "heart" else "#111827"
-    draw.text((box[0] + 10, box[1] + 7), rank, font=FONTS["medium"], fill=color)
-    draw.text((box[2] - 31, box[3] - 40), rank, font=FONTS["medium"], fill=color)
+    card_font = FONTS["label"]
+    draw.text((box[0] + 5, box[1] + 3), rank, font=card_font, fill=color)
     if suit == "heart":
-        draw_heart(draw, center_x, center_y + 2, 25, color)
+        draw_heart(draw, center_x, center_y + 9, 13, color)
     else:
-        draw_spade(draw, center_x, center_y + 3, 27, color)
+        draw_spade(draw, center_x, center_y + 9, 14, color)
 
 
 def draw_heart(draw, center_x, center_y, radius, color):
@@ -693,8 +800,9 @@ def main():
     logo_duration = float(config["logo_duration_seconds"])
     eyes_duration = float(config["eyes_duration_seconds"])
     beer_duration = float(config.get("beer_duration_seconds", 8))
-    blackjack_duration = float(config.get("blackjack_duration_seconds", 10))
-    blackjack_started = None
+    blackjack_stand_timeout = float(config.get("blackjack_stand_timeout_seconds", 4))
+    blackjack_result_duration = float(config.get("blackjack_result_duration_seconds", 5))
+    blackjack_game = BlackjackGame()
     blackjack_was_pressed = False
     last_mode = None
 
@@ -709,18 +817,17 @@ def main():
 
             blackjack_pressed = blackjack_button.is_pressed if blackjack_button else False
             if blackjack_pressed and not blackjack_was_pressed and telemetry.running:
-                blackjack_started = now
+                blackjack_game.press(now)
             blackjack_was_pressed = blackjack_pressed
             if not telemetry.running:
-                blackjack_started = None
+                blackjack_game.reset()
+            blackjack_game.update(now, blackjack_stand_timeout, blackjack_result_duration)
 
-            blackjack_time = now - blackjack_started if blackjack_started is not None else None
-            if blackjack_time is not None and blackjack_time < blackjack_duration:
+            if blackjack_game.active:
                 mode = "blackjack"
-                left.show(render_blackjack("left", blackjack_time, blackjack_duration))
-                right.show(render_blackjack("right", blackjack_time, blackjack_duration))
+                left.show(render_blackjack_game("left", blackjack_game, now, blackjack_stand_timeout))
+                right.show(render_blackjack_game("right", blackjack_game, now, blackjack_stand_timeout))
             else:
-                blackjack_started = None
                 active_beer_duration = beer_duration if telemetry.running else 0
                 cycle_duration = status_duration + logo_duration + eyes_duration + active_beer_duration
                 cycle_time = (now - started_at) % cycle_duration

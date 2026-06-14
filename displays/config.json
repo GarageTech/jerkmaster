@@ -18,5 +18,6 @@
   "logo_duration_seconds": 6,
   "eyes_duration_seconds": 10,
   "beer_duration_seconds": 12,
-  "blackjack_duration_seconds": 10
+  "blackjack_stand_timeout_seconds": 4,
+  "blackjack_result_duration_seconds": 5
 }

@@ -159,6 +159,7 @@ security-related history rewrite does not leave links to superseded commits.
 
 - Added a periodic active-drying display scene with an animated filling beer glass, bubbles, progress percentage, and remaining time.
 - Added a Raspberry Pi GPIO17 button that triggers a two-screen blackjack animation only during active drying.
+- Expanded the GPIO17 blackjack scene into a playable one-button game with player and dealer hands, hit actions, timed stand, dealer draw rules, and round results.
 - Added `0.1.0-alpha` current-status and known-issues sections to the main README.
 - Expanded `.gitignore` for Wi-Fi credentials, Moonraker secrets, API keys, SSH keys, certificates, personal configs, user data, and backups.
 - Replaced the reference-build MCU serial and exact local IP example with public-safe placeholders.
