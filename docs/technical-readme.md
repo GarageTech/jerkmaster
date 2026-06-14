@@ -86,6 +86,14 @@ source of truth.
 ![HTML5](https://img.shields.io/badge/HTML5-Interface-E34F26?logo=html5&logoColor=white)
 ![CSS](https://img.shields.io/badge/CSS-Styling-663399?logo=css&logoColor=white)
 
+### Round Status Displays
+
+The optional dual GC9A01 displays show chamber temperature and process progress.
+They are read-only and periodically switch to JerkMaster branding and animated
+eyes.
+
+![JerkMaster dual status display states](../img/docs/screenshots/status-displays.png)
+
 ## Interface Tour
 
 The dashboard combines process control, telemetry, diagnostics, recipe scaling, salinity calculations and the active drying profile.

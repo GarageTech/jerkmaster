@@ -174,6 +174,7 @@ the same commit.
 
 ### Fixed
 
+- Moved lower status-display labels and temperatures fully inside the round screens.
 - Prevented completed or stopped drying processes from being restored from stale browser storage.
 - Fixed Russian `г` and Russian number formatting appearing in the English ingredient tables.
 - Added the missing translation for the calculated-salinity label.
@@ -186,6 +187,7 @@ the same commit.
 
 ### Documentation
 
+- Added rendered previews of the dual round status-display states.
 - Replaced password-prone `git pull` update instructions with the public archive updater.
 - Reconstructed the complete project changelog in chronological commit order with links to all existing commits.
 - Added contributor and agent rules requiring `CHANGELOG.md` updates with future project changes.

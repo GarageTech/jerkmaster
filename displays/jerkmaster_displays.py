@@ -251,7 +251,7 @@ def render_temperature(telemetry):
     centered(draw, (120, 143), f"TARGET {telemetry.target_temp:.0f}°", FONTS["medium"], AMBER)
     status_dot(draw, (42, 187), "HEAT", telemetry.heater_on, AMBER)
     status_dot(draw, (137, 187), "FAN", telemetry.fan_on, CYAN)
-    centered(draw, (120, 218), "RUNNING" if telemetry.running else "IDLE", FONTS["label"], GREEN if telemetry.running else MUTED)
+    centered(draw, (120, 207), "RUNNING" if telemetry.running else "IDLE", FONTS["label"], GREEN if telemetry.running else MUTED)
     return image
 
 
@@ -267,11 +267,11 @@ def render_process(telemetry):
     centered(draw, (120, 72), f"STAGE {telemetry.stage or '-'}", FONTS["medium"])
     centered(draw, (120, 116), "COOLING" if telemetry.stage == 5 else format_duration(remaining), FONTS["medium"], CYAN)
     centered(draw, (120, 148), f"{progress * 100:.0f}%", FONTS["label"], MUTED)
-    draw.line((43, 170, 197, 170), fill=TRACK, width=3)
-    centered(draw, (75, 190), "BAY", FONTS["small"], MUTED)
-    centered(draw, (75, 216), f"{telemetry.bay_temp:.0f}°", FONTS["medium"], temperature_color(telemetry.bay_temp, 50, 60))
-    centered(draw, (165, 190), "RPI", FONTS["small"], MUTED)
-    centered(draw, (165, 216), f"{telemetry.rpi_temp:.0f}°", FONTS["medium"], temperature_color(telemetry.rpi_temp, 65, 75))
+    draw.line((43, 165, 197, 165), fill=TRACK, width=3)
+    centered(draw, (75, 181), "BAY", FONTS["small"], MUTED)
+    centered(draw, (75, 205), f"{telemetry.bay_temp:.0f}°", FONTS["medium"], temperature_color(telemetry.bay_temp, 50, 60))
+    centered(draw, (165, 181), "RPI", FONTS["small"], MUTED)
+    centered(draw, (165, 205), f"{telemetry.rpi_temp:.0f}°", FONTS["medium"], temperature_color(telemetry.rpi_temp, 65, 75))
     return image
 
 
