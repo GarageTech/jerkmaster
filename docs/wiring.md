@@ -22,30 +22,14 @@
 | Heater SSR input | HE0 | `P2.7` |
 | Fan SSR input | FAN0 | `P2.3` |
 | 12 V chamber LED light | HE1 | `P2.4` |
+| Blue button LED | BED | `P2.5` |
 | Drying-chamber NTC | TH0 | `P0.24` |
 | Electronics-bay NTC | TH1 | `P0.23` |
 | Raspberry Pi temperature | Built-in SoC sensor | `temperature_host` |
 
 These are common reference assignments, not a guarantee for a specific board revision or installation. Verify the BTT SKR 1.4 Turbo schematic, connector labels, and actual wiring before applying power.
 
-## Proposed Front-Panel Power And Indicator Wiring
-
-### Final Front-Panel Connections
-
-| Circuit | Connection | Purpose |
-|---|---|---|
-| Momentary button `COM` / `NO` | BTT relay button input | Normal-power request |
-| LED common | Fused 12 V, correct polarity | Matches a 12 V button LED |
-| Blue LED return | `BED / P2.5` low-side output | READY/RUNNING/COMPLETE indication |
-| Unused LED channels | Disconnected and insulated | Only the blue channel is used |
-| Chamber light | `HE1 / P2.4` low-side output | Existing chamber illumination |
-| Heater SSR | `HE0 / P2.7` | Heater control |
-| Circulation-fan SSR | `FAN0 / P2.3` | Drying-chamber airflow |
-
-BED and HE1 are low-side MOSFET outputs: connect each load according to the SKR
-board schematic and verify polarity before applying power.
-
-### Momentary Button And BTT Shutdown Relay
+## Momentary Button And BTT Shutdown Relay
 
 The button contains two separate circuits. Verify them with a multimeter before
 wiring:

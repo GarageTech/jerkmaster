@@ -188,7 +188,7 @@ the same commit.
 ### Documentation
 
 - Replaced the obsolete original-control-panel description with the dual-display, dual-fan, momentary-button front-panel concept.
-- Documented BTT Power Shutdown Relay V1.2 power domains and the final single-blue-indicator front-panel wiring.
+- Documented BTT Power Shutdown Relay V1.2 power domains and added the blue button LED to the reference pin mapping.
 - Selected BED/P2.5 for the blue button LED while retaining the HE1 chamber light; unused button LED channels remain disconnected.
 - Added rendered previews of the dual round status-display states.
 - Replaced password-prone `git pull` update instructions with the public archive updater.
