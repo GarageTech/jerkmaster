@@ -192,6 +192,7 @@ security-related history rewrite does not leave links to superseded commits.
 
 ### Documentation
 
+- Completed the public-release secret/history audit and published the `v0.1.0-alpha` tag.
 - Added real build photographs covering the electronics-bay conversion, terminal wiring, front-panel fabrication, and finished jerky.
 - Replaced the obsolete original-control-panel description with the dual-display, dual-fan, momentary-button front-panel concept.
 - Documented BTT Power Shutdown Relay V1.2 power domains and added the blue button LED to the reference pin mapping.
