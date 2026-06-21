@@ -96,7 +96,7 @@ export class MoonrakerClient {
             "temperature_sensor electronics_bay",
             "temperature_sensor raspberry_pi",
             "output_pin dryer_fan",
-            "output_pin chamber_light",
+            "gcode_macro CHAMBER_LIGHT_STATE",
             "gcode_macro DRYER_STATE",
             "toolhead",
             "webhooks"
@@ -118,7 +118,7 @@ export class MoonrakerClient {
             const bay = status["temperature_sensor electronics_bay"] ?? {};
             const cpu = status["temperature_sensor raspberry_pi"] ?? {};
             const fan = status["output_pin dryer_fan"] ?? {};
-            const light = status["output_pin chamber_light"] ?? {};
+            const light = status["gcode_macro CHAMBER_LIGHT_STATE"] ?? {};
             const dryerState = status["gcode_macro DRYER_STATE"] ?? {};
             const toolhead = status.toolhead ?? {};
             const webhooks = status.webhooks ?? {};
@@ -147,7 +147,7 @@ export class MoonrakerClient {
                 heaterPower: clampPower(heater.power),
                 fanOn: Number(fan.value ?? 0) > 0,
                 fanPower: clampPower(fan.value),
-                lightOn: Number(light.value ?? 0) > 0
+                lightOn: Number(light.on ?? 0) > 0
             };
         } catch (error) {
             console.warn("Moonraker telemetry unavailable:", error);
@@ -186,7 +186,7 @@ export class MoonrakerClient {
     }
 
     setChamberLight(on) {
-        return this.runGcode(`SET_PIN PIN=chamber_light VALUE=${on ? 1 : 0}`)
+        return this.runGcode(`SET_CHAMBER_LIGHT ON=${on ? 1 : 0}`)
             .then(() => this.refreshTelemetry());
     }
 

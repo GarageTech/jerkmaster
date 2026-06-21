@@ -33,7 +33,7 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 - AC 220–240 V, 50 Hz, 400 W
 - Reference fan: AC 220 V, approximately 1320 RPM, 660 Ohm
 - Reference heater: AC 220 V, 120 Ohm
-- Reference LED light: DC 12V
+- Chamber light: 8x WS2812B NeoPixel ring on the SKR NeoPixel connector
 - Rreference sensor: NTC 100K
 
 ## Controller And Compute
@@ -48,6 +48,7 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 - Mean Well LRS-150-12
 - BTT Power Shutdown Relay V1.2 for normal electronics power control
 - 12 V momentary RGB push button with separate switch and LED terminals
+- 8x WS2812B NeoPixel LED ring for chamber illumination
 
 ## Load Switching
 

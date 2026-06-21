@@ -21,7 +21,8 @@
 |---|---|---|
 | Heater SSR input | HE0 | `P2.7` |
 | Fan SSR input | FAN0 | `P2.3` |
-| 12 V chamber LED light | HE1 | `P2.4` |
+| 8x WS2812B chamber NeoPixel ring | NeoPixel | `P1.24` |
+| BTT Relay V1.2 shutdown signal | Free output | `P2.0` |
 | Blue button LED | BED | `P2.5` |
 | Drying-chamber NTC | TH0 | `P0.24` |
 | Electronics-bay NTC | TH1 | `P0.23` |
@@ -87,9 +88,10 @@ Suggested software ownership:
 - OFF is a physical state after the BTT relay removes electronics power; it is
   not a software animation.
 
-Do not implement automatic mains power-off until the exact BTT relay module's
-button, hold, and shutdown-signal behavior has been bench-tested. The Raspberry
-Pi must finish a graceful filesystem shutdown before relay power is released.
+The SKR `PS_ON` output on `P2.0` is used as the BTT relay shutdown signal. In
+Klipper it defaults high while the controller is alive and drops low on firmware
+shutdown or after the programmed completion delay. Verify the exact relay
+module behavior on the bench before relying on automatic power-off.
 
 ## Optional Dual Round Status Displays
 
@@ -116,8 +118,8 @@ temperature and Raspberry Pi temperature.
 ## Critical Safety Requirements
 
 - Verify the exact SSR model, input voltage, output type, load rating, and heatsink requirements.
-- Supply the HE1 power section with exactly 12 V and verify that the LED light current is within the board output rating before connecting it.
-- Observe LED polarity. The SKR HE1 MOSFET output switches the negative side of the load.
+- Power the WS2812B ring from a suitable 5 V rail, observe data direction, and verify that the total LED current is within the regulator and wiring ratings.
+- Verify the BTT Relay V1.2 shutdown input polarity before connecting `P2.0`.
 - Install an independent one-shot thermal fuse in series with the heater.
 - Install a physical emergency stop that removes heater power.
 - Use protective earth, correctly rated breakers/fuses, suitable conductors, strain relief, and a closed non-combustible enclosure.

@@ -157,6 +157,8 @@ security-related history rewrite does not leave links to superseded commits.
 
 ### Changed
 
+- Replaced the HE1 chamber light output with an 8x WS2812B NeoPixel ring on `P1.24`, controlled through `SET_CHAMBER_LIGHT`.
+- Added `PS_ON` on `P2.0` for the BTT Relay V1.2 shutdown module and scheduled automatic power-off ten minutes after completed drying.
 - Added a periodic active-drying display scene with an animated filling beer glass, bubbles, progress percentage, and remaining time.
 - Added a Raspberry Pi GPIO17 button that triggers a two-screen blackjack animation only during active drying.
 - Expanded the GPIO17 blackjack scene into a playable one-button game with player and dealer hands, hit actions, timed stand, dealer draw rules, and round results.
@@ -201,7 +203,7 @@ security-related history rewrite does not leave links to superseded commits.
 - Added real build photographs covering the electronics-bay conversion, terminal wiring, front-panel fabrication, and finished jerky.
 - Replaced the obsolete original-control-panel description with the dual-display, dual-fan, momentary-button front-panel concept.
 - Documented BTT Power Shutdown Relay V1.2 power domains and added the blue button LED to the reference pin mapping.
-- Selected BED/P2.5 for the blue button LED while retaining the HE1 chamber light; unused button LED channels remain disconnected.
+- Selected BED/P2.5 for the blue button LED and kept unused button LED channels disconnected.
 - Added rendered previews of the dual round status-display states.
 - Replaced password-prone `git pull` update instructions with the public archive updater.
 - Reconstructed the complete project changelog in chronological commit order with links to all existing commits.

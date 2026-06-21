@@ -121,11 +121,12 @@ SSR outputs.
 
 1. At room temperature, both NTC sensors must report plausible and stable values.
 2. Run `SET_PIN PIN=dryer_fan VALUE=1`, then `SET_PIN PIN=dryer_fan VALUE=0`.
-3. Verify HE1 supplies 12 V, then run `SET_PIN PIN=chamber_light VALUE=1` and `SET_PIN PIN=chamber_light VALUE=0`.
-4. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
-5. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
-6. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
-7. Verify the web-interface E-STOP button.
+3. Verify the chamber NeoPixel ring with `SET_CHAMBER_LIGHT ON=1`, then `SET_CHAMBER_LIGHT ON=0`.
+4. Verify `PS_ON` stays high during normal operation with `SET_PIN PIN=PS_ON VALUE=1`; do not test automatic power-off until the relay behavior is understood.
+5. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
+6. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
+7. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
+8. Verify the web-interface E-STOP button.
 
 Only connect mains-powered loads after these checks and after the installation
 has been reviewed by a qualified electrician.
