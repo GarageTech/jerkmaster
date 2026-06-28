@@ -57,3 +57,4 @@ img/docs/dji_mimo_*_video.mp4
 *.orig
 *.swp
 *~
+.~lock.*#

@@ -27,7 +27,7 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 
 ## Highlights
 
-- Multi-stage drying profiles with temperature, duration, fan power, and optional target weight loss.
+- Multi-stage drying profiles with temperature, duration, fan-on stages, and displayed target weight-loss guidance.
 - Custom one-shot drying mode: choose temperature and time, then start.
 - Recipe calculator scaled by meat weight.
 - Explicit spice-mix dosage per kilogram of meat.
@@ -41,6 +41,9 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 - Moonraker and Klipper integration.
 - Emergency-stop command.
 - Diagnostic status reporting.
+- SKR-owned button LED effects for ready, running, complete, door-open, emergency, and shutdown states.
+- Door-open handling that turns the heater off, switches the chamber light on, updates the round displays, and plays an audio cue.
+- MAX98357A sound cues driven by the Raspberry Pi display service.
 - Demo mode for testing the interface without connected hardware.
 - Responsive browser UI with no build step.
 
@@ -52,6 +55,11 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 - Omron G3NA-210B SSRs for heater and circulation fan
 - EPCOS 100K NTC sensors for chamber and electronics bay
 - Mean Well power supplies
+- Two GC9A01 round status displays
+- MAX98357A I2S audio amplifier and speaker
+- BTT Power Shutdown Relay V1.2
+- Two illuminated front-panel buttons and a normally closed door microswitch
+- Factory 4 pcs 12 V chamber LEDs replaced by an 8x WS2812B NeoPixel chamber-light ring
 - Independent thermal fuse, protective earth, breaker, and physical emergency stop
 
 VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentioned here are not sponsors or affiliates of this project. Their hardware was simply useful for the build.
@@ -62,7 +70,7 @@ VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentione
 |---|---|
 | Browser UI | Dashboard, calculators, CRUD editors, translations, telemetry, diagnostics |
 | Moonraker | HTTP API between the browser and Klipper |
-| Klipper | Heater/fan control, sensors, safety limits, and non-blocking drying macros |
+| Klipper | Heater/fan control, sensors, button LEDs, door/action inputs, PS_ON, safety limits, and non-blocking drying macros |
 | Klipper `DRYER_STATE` | Authoritative active recipe, profile, stage, settings, and elapsed time |
 | Raspberry user-data files | User-created and edited ingredients, recipes, and profiles shared by every browser |
 | Browser local storage | Language preference for that browser |
@@ -88,9 +96,9 @@ source of truth.
 
 ### Round Status Displays
 
-The optional dual GC9A01 displays show chamber temperature and process progress.
-They are read-only and periodically switch to JerkMaster branding and animated
-eyes.
+The dual GC9A01 displays show chamber temperature, process progress, branding,
+animated eyes, and process scenes. The Raspberry Pi display service also plays
+MAX98357A sound cues for startup, beer scene, game/action feedback, and shutdown.
 
 ![JerkMaster dual status display states](../img/docs/screenshots/status-displays.png)
 

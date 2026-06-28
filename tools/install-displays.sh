@@ -11,14 +11,15 @@ if [[ "${EUID}" -ne 0 ]]; then
 fi
 
 apt-get update
-apt-get install -y python3-gpiozero python3-pil python3-spidev fonts-dejavu-core
+apt-get install -y alsa-utils python3-gpiozero python3-pil python3-spidev fonts-dejavu-core
 
 install -d -m 0755 "${INSTALL_DIR}"
 install -m 0755 "${PROJECT_DIR}/displays/jerkmaster_displays.py" "${INSTALL_DIR}/jerkmaster_displays.py"
 install -m 0644 "${PROJECT_DIR}/img/logo.png" "${INSTALL_DIR}/logo.png"
-if [[ ! -f "${INSTALL_DIR}/config.json" ]]; then
-    install -m 0644 "${PROJECT_DIR}/displays/config.json" "${INSTALL_DIR}/config.json"
-fi
+
+install -d -m 0755 "${INSTALL_DIR}/sounds"
+install -m 0755 "${PROJECT_DIR}/sounds/play_sound.py" "${INSTALL_DIR}/sounds/play_sound.py"
+install -m 0644 "${PROJECT_DIR}/sounds/"*.wav "${INSTALL_DIR}/sounds/"
 
 cat >"${SERVICE_FILE}" <<EOF
 [Unit]
@@ -29,7 +30,6 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=${INSTALL_DIR}
-Environment=JERKMASTER_DISPLAY_CONFIG=${INSTALL_DIR}/config.json
 ExecStart=/usr/bin/python3 ${INSTALL_DIR}/jerkmaster_displays.py
 Restart=always
 RestartSec=3
@@ -40,10 +40,6 @@ EOF
 
 systemctl daemon-reload
 systemctl enable --now jerkmaster-displays.service
-
-if [[ ! -e /dev/spidev0.0 ]]; then
-    echo "WARNING: SPI is not enabled. Run 'sudo raspi-config nonint do_spi 0' and reboot." >&2
-fi
 
 echo "Display service installed. Check it with:"
 echo "  sudo systemctl status jerkmaster-displays"

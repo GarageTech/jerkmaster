@@ -71,40 +71,49 @@ Use suitable crimp terminals and a proper crimping tool. Do not crimp electrical
 
 This is not a low-voltage toy project. Treat it like real electrical equipment.
 
-## New Front Panel
+## Current Front Panel
 
-The planned front panel replaces the original controls with two centered round
-status displays, two continuously powered Noctua cooling fans, and one
-momentary 12 V RGB push button.
+The current front-panel architecture replaces the original controls with two
+centered round status displays, two continuously powered Noctua cooling fans, a
+power/wake button, an action/safe-shutdown button, and Raspberry Pi sound
+feedback.
 
 ![JerkMaster front-panel concept](../img/docs/illustrations/front-panel-concept.png)
 
-The original stainless panel has already been stripped and prepared for the new
-layout. The rectangular opening and circular cutouts will be covered by the new
-front-panel insert.
+The original stainless panel was stripped and prepared for the new layout. The
+rectangular opening and circular cutouts are covered by the new front-panel
+insert.
 
 | Stripped original frame | Prepared front-panel cutouts |
 |---|---|
 | ![Stripped original control-panel frame](../img/docs/build/front-panel-frame.jpg) | ![Prepared front-panel cutouts](../img/docs/build/front-panel-cutouts.jpg) |
+
+The display board was first assembled and tested on the bench before being
+integrated into the front-panel wiring.
+
+| Display board assembly | Live dual-display test |
+|---|---|
+| ![Dual GC9A01 display board on the bench](../img/docs/build/display-bench-assembly.jpg) | ![Live JerkMaster dual-display test](../img/docs/build/status-displays-live-test.jpg) |
 
 The two fans sit on either side of the displays and provide a direct airflow path
 through the electronics bay. They are not software-controlled: whenever the
 electronics power supply is on, both fans run. This avoids making controller
 cooling dependent on firmware, GPIO state, or a temperature rule.
 
-The momentary button is used to request power through a BTT Power Shutdown Relay
-V1.2. Its switch contacts and RGB LED are electrically separate:
+The power/wake momentary button is used to restart electronics through a BTT
+Power Shutdown Relay V1.2 after relay shutdown. Its switch contacts and LED are
+electrically separate:
 
 - the momentary switch contacts connect only to the relay module's button input;
 - the relay module receives mains input continuously and switches the downstream
   electronics supply;
-- the blue LED channel is driven from 12 V through the free SKR BED MOSFET
-  output;
-- the unused LED channels are left disconnected and insulated.
+- the power button LED is driven from 12 V through the SKR BED MOSFET output;
+- the action button LED is driven from 12 V through the SKR HE1 MOSFET output;
+- the action button contacts and door microswitch are handled by SKR inputs.
 
-The button is a normal power-control interface, not an emergency stop. It must
-not replace the physical E-stop, independent thermal fuse, breaker, protective
-earth, or a correctly rated safety contactor where one is required.
+The buttons are normal power and interface controls, not emergency stops. They
+must not replace the physical E-stop, independent thermal fuse, breaker,
+protective earth, or a correctly rated safety contactor where one is required.
 
 ## Real-World Use
 

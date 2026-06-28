@@ -27,21 +27,21 @@ The project is functional but under active development.
 
 | Item | Status |
 |---|---|
-| Version | `0.1.0-alpha` |
-| Hardware | Tested |
+| Version | `0.2.0-alpha` |
+| Hardware | Current Raspberry/SKR split architecture documented |
 | Software | Tested |
 | First production drying run | Completed |
 | Repository visibility | Public |
-| Release | `v0.1.0-alpha` |
+| Release | `v0.2.0-alpha` |
 
-`VERSION = 0.1.0`
+`VERSION = 0.2.0`
 
 ## Known Issues
 
 - Browser reconnect and active-process state restoration remain under active
   development and require more long-running failure testing.
-- Local round-display software is implemented, but the new front-panel display
-  hardware is not yet installed.
+- The current hardware revision uses dual GC9A01 displays, MAX98357A sound,
+  SKR-owned button LEDs, SKR action/door inputs, and BTT Relay power cut.
 - Power-management integration with the BTT Power Shutdown Relay V1.2 is
   experimental and must not be used as a safety disconnect.
 - Installation still requires adapting local MCU serial, network, Moonraker,

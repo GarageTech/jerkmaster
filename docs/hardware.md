@@ -15,7 +15,9 @@
 
 # Reference Hardware
 
-The reference JerkMaster build uses the components below. Equivalent parts can be used only after checking electrical compatibility, sensor behavior, power requirements, and safety limits.
+The reference JerkMaster `0.2.0-alpha` hardware revision uses the components
+below. Equivalent parts can be used only after checking electrical
+compatibility, sensor behavior, power requirements, and safety limits.
 
 ## Reference Build Brands
 
@@ -33,21 +35,26 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 - AC 220–240 V, 50 Hz, 400 W
 - Reference fan: AC 220 V, approximately 1320 RPM, 660 Ohm
 - Reference heater: AC 220 V, 120 Ohm
-- Chamber light: 8x WS2812B NeoPixel ring on the SKR NeoPixel connector
-- Rreference sensor: NTC 100K
+- Original chamber lighting: 4 pcs 12 V LEDs from the factory construction
+- JerkMaster chamber-light retrofit: 8x WS2812B NeoPixel ring on the SKR NeoPixel connector
+- Reference sensor: NTC 100K
 
 ## Controller And Compute
 
 - Raspberry Pi 3 Model B+
 - BTT SKR 1.4 Turbo
 - USB A-to-B host/controller cable
+- Two 1.28-inch GC9A01 round status displays on Raspberry Pi SPI0
+- MAX98357A I2S amplifier and speaker for Raspberry Pi sound feedback
 
 ## Power
 
 - Mean Well RS-25-5
 - Mean Well LRS-150-12
 - BTT Power Shutdown Relay V1.2 for normal electronics power control
-- 12 V momentary RGB push button with separate switch and LED terminals
+- Power/wake momentary button wired to BTT Relay RESET
+- Action/menu/safe-shutdown momentary button wired to SKR `X_MIN` / `P1.29`
+- Two 12 V-ready button LEDs switched by SKR BED / `P2.5` and HE1 / `P2.4`
 - 8x WS2812B NeoPixel LED ring for chamber illumination
 
 ## Load Switching
@@ -62,6 +69,7 @@ The reference JerkMaster build uses the components below. Equivalent parts can b
 - EPCOS 100K NTC for drying chamber
 - EPCOS 100K NTC for electronics bay
 - Raspberry Pi SoC temperature sensor
+- Normally closed door microswitch wired to SKR `Y_MIN` / `P1.27`
 
 ## Cooling
 

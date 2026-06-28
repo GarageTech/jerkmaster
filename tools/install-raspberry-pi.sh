@@ -32,7 +32,7 @@ for file in index.html ingredients.html recipes.html profiles.html making-jerky.
     install -m 0644 "${PROJECT_DIR}/${file}" "${INSTALL_DIR}/${file}"
 done
 
-for directory in css data img js recipes translations; do
+for directory in css data img js recipes sounds translations; do
     rm -rf -- "${INSTALL_DIR:?}/${directory}"
     cp -a -- "${PROJECT_DIR}/${directory}" "${INSTALL_DIR}/${directory}"
 done

@@ -3,8 +3,8 @@
 
 import json
 import math
-import os
 import random
+import subprocess
 import time
 import urllib.parse
 import urllib.request
@@ -14,7 +14,7 @@ from typing import Optional
 
 import spidev
 from gpiozero import Button, OutputDevice
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
 WIDTH = 240
@@ -56,8 +56,33 @@ FONTS = {
 }
 
 
+class Backlight:
+    """Backlight helper. These GC9A01 modules often use active LOW BL."""
+    def __init__(self, pin, active_low=True):
+        self.device = OutputDevice(int(pin), initial_value=False)
+        self.active_low = active_low
+
+    def on(self):
+        if self.active_low:
+            self.device.off()
+        else:
+            self.device.on()
+
+    def off(self):
+        if self.active_low:
+            self.device.on()
+        else:
+            self.device.off()
+
+
 class GC9A01:
-    """Minimal GC9A01 driver using shared SPI and manually controlled CS."""
+    """Minimal GC9A01 driver for hardware SPI CE0/CE1.
+
+    Wiring:
+      left  display CS -> GPIO8  / CE0 -> spi.open(0, 0)
+      right display CS -> GPIO7  / CE1 -> spi.open(0, 1)
+      DC and RST are shared.
+    """
 
     INIT_SEQUENCE = (
         (0xEF, b""),
@@ -78,7 +103,8 @@ class GC9A01:
         (0x8E, b"\xFF"),
         (0x8F, b"\xFF"),
         (0xB6, b"\x00\x20"),
-        (0x36, b"\x08"),
+        # Same MADCTL as your working gc9a01_test.py
+        (0x36, b"\x48"),
         (0x3A, b"\x05"),
         (0x90, b"\x08\x08\x08\x08"),
         (0xBD, b"\x06"),
@@ -108,39 +134,43 @@ class GC9A01:
         (0x98, b"\x3E\x07"),
     )
 
-    def __init__(self, spi, dc, reset, cs, backlight, rotation=0):
+    def __init__(self, spi, dc, reset, backlight, rotation=0, mirror=False, flip=False):
         self.spi = spi
         self.dc = dc
         self.reset = reset
-        self.cs = cs
         self.backlight = backlight
         self.rotation = rotation
+        self.mirror = mirror
+        self.flip = flip
 
     def initialize(self):
-        self.cs.on()
-        self.backlight.off()
+        self.backlight.on()
         for command, data in self.INIT_SEQUENCE:
             self.write(command, data)
+        self.write(0x35)
+        self.write(0x21)
         self.write(0x11)
         time.sleep(0.12)
-        self.write(0x21)
         self.write(0x29)
         time.sleep(0.02)
         self.backlight.on()
 
     def write(self, command, data=b""):
-        self.cs.off()
         self.dc.off()
-        self.spi.xfer2([command])
+        self.spi.writebytes([command])
         if data:
             self.dc.on()
-            self.spi.writebytes2(list(data))
-        self.cs.on()
+            self.spi.writebytes(list(data))
 
     def show(self, image):
         image = image.convert("RGB")
         if self.rotation:
-            image = image.rotate(self.rotation)
+            image = image.rotate(self.rotation, expand=False)
+        if self.mirror:
+            image = ImageOps.mirror(image)
+        if self.flip:
+            image = ImageOps.flip(image)
+
         pixels = bytearray(WIDTH * HEIGHT * 2)
         offset = 0
         for red, green, blue in image.getdata():
@@ -148,14 +178,17 @@ class GC9A01:
             pixels[offset] = value >> 8
             pixels[offset + 1] = value & 0xFF
             offset += 2
+
         self.write(0x2A, b"\x00\x00\x00\xEF")
         self.write(0x2B, b"\x00\x00\x00\xEF")
-        self.cs.off()
+
         self.dc.off()
-        self.spi.xfer2([0x2C])
+        self.spi.writebytes([0x2C])
         self.dc.on()
-        self.spi.writebytes2(pixels)
-        self.cs.on()
+
+        chunk = 4096
+        for index in range(0, len(pixels), chunk):
+            self.spi.writebytes(pixels[index:index + chunk])
 
 
 @dataclass
@@ -173,6 +206,8 @@ class Telemetry:
     heater_on: bool = False
     fan_on: bool = False
     custom_minutes: float = 0
+    last_result: str = "NONE"
+    door_open: bool = False
 
 
 class Moonraker:
@@ -182,6 +217,7 @@ class Moonraker:
         "temperature_sensor raspberry_pi",
         "output_pin dryer_fan",
         "gcode_macro DRYER_STATE",
+        "gcode_macro INPUT_STATE",
         "toolhead",
         "webhooks",
     )
@@ -197,6 +233,7 @@ class Moonraker:
 
         heater = status.get("heater_generic dryer_heater", {})
         state = status.get("gcode_macro DRYER_STATE", {})
+        input_state = status.get("gcode_macro INPUT_STATE", {})
         toolhead = status.get("toolhead", {})
         webhooks = status.get("webhooks", {})
         stage_started = number(state.get("stage_started_at"))
@@ -220,6 +257,8 @@ class Moonraker:
             heater_on=number(heater.get("power")) > 0,
             fan_on=number(status.get("output_pin dryer_fan", {}).get("value")) > 0,
             custom_minutes=number(state.get("custom_minutes")),
+            last_result=str(state.get("last_result", "NONE")),
+            door_open=number(input_state.get("door_open")) == 1,
         )
 
 
@@ -357,17 +396,33 @@ def render_eye(side, animation_time):
     return image
 
 
+
 def render_beer_progress(side, telemetry, animation_time, scene_duration=8.0):
     image = Image.new("RGB", (WIDTH, HEIGHT), "#020507")
     draw = ImageDraw.Draw(image)
     progress, remaining = process_progress(telemetry)
-    reveal_duration = min(2.4, max(0.8, scene_duration * 0.35))
-    shown_progress = progress * smooth_step(animation_time / reveal_duration)
+
+    # Beer animation is independent from dryer progress.
+    # Slow enough to actually see the fill/foam transition.
+    beer_fill_seconds = 10.0
+    foam_grow_seconds = 7.0
+    hold_seconds = max(3.0, scene_duration - beer_fill_seconds - foam_grow_seconds)
+
+    t = animation_time % (beer_fill_seconds + foam_grow_seconds + hold_seconds)
+
+    if t < beer_fill_seconds:
+        beer_animation_progress = 0.80 * smooth_step(t / beer_fill_seconds)
+    elif t < beer_fill_seconds + foam_grow_seconds:
+        foam_progress = smooth_step((t - beer_fill_seconds) / foam_grow_seconds)
+        beer_animation_progress = 0.80 + 0.20 * foam_progress
+    else:
+        beer_animation_progress = 1.0
 
     draw.arc((8, 8, 232, 232), 0, 359, fill=TRACK, width=8)
     if side == "left":
-        render_beer_glass(draw, shown_progress, animation_time)
+        render_beer_glass(draw, beer_animation_progress, animation_time)
     else:
+        # Keep the DRINKING -> DRYING effect on the right screen.
         render_drinking_to_drying(draw, progress, remaining, animation_time)
     return image
 
@@ -443,47 +498,92 @@ def mix_color(start, end, amount):
     return f"#{mixed[0]:02x}{mixed[1]:02x}{mixed[2]:02x}"
 
 
+
 def render_beer_glass(draw, progress, animation_time):
-    glass = (48, 25, 180, 214)
-    glass_inner = (57, 34, 171, 205)
-    glass_height = glass_inner[3] - glass_inner[1]
-    fill_top = glass_inner[3] - int(glass_height * max(0.0, min(1.0, progress)))
+    """Full-screen beer fill with foam and bubbles.
 
-    draw.rounded_rectangle(glass, radius=20, outline=WHITE, width=7)
-    draw.arc((164, 76, 225, 175), -86, 88, fill=WHITE, width=7)
-    draw.arc((171, 87, 211, 163), -86, 88, fill=WHITE, width=5)
-    if fill_top >= glass_inner[3]:
-        return
-
+    progress:
+      0.00..0.80 = beer rises to 80% screen height
+      0.80..1.00 = foam grows above beer, leaving black headspace
+    """
     beer_color = "#f59e0b"
     beer_dark = "#d97706"
-    foam_height = min(20, glass_inner[3] - fill_top)
-    draw.rounded_rectangle(
-        (glass_inner[0], fill_top, glass_inner[2], glass_inner[3]),
-        radius=13,
-        fill=beer_color,
-    )
-    body_top = min(fill_top + 14, glass_inner[3] - 12)
-    if body_top < glass_inner[3] - 12:
-        draw.rectangle((glass_inner[0], body_top, glass_inner[2], glass_inner[3] - 12), fill=beer_dark)
-        draw.rectangle((glass_inner[0], body_top, glass_inner[2], glass_inner[3] - 12), fill=beer_color)
+    beer_light = "#fbbf24"
+    foam_color = "#fff7d6"
+    foam_shadow = "#fde68a"
 
-    foam_y = fill_top
-    draw.ellipse((57, foam_y - 5, 91, foam_y + foam_height), fill="#fff7d6")
-    draw.ellipse((82, foam_y - 9, 125, foam_y + foam_height), fill="#fff7d6")
-    draw.ellipse((116, foam_y - 5, 151, foam_y + foam_height), fill="#fff7d6")
-    draw.ellipse((143, foam_y - 7, 171, foam_y + foam_height), fill="#fff7d6")
+    progress = max(0.0, min(1.0, progress))
 
-    bubble_columns = ((74, 0.3, 4), (96, 0.7, 3), (119, 0.1, 5), (145, 0.5, 4), (160, 0.85, 3))
-    liquid_top = min(glass_inner[3] - 10, fill_top + foam_height)
-    liquid_height = glass_inner[3] - liquid_top - 8
-    if liquid_height <= 8:
-        return
-    for x, offset, radius in bubble_columns:
-        travel = (animation_time * (28 + radius * 3) + offset * liquid_height) % liquid_height
-        y = glass_inner[3] - 7 - travel
-        if y > liquid_top + radius:
-            draw.ellipse((x - radius, y - radius, x + radius, y + radius), outline="#fff7d6", width=2)
+    # Keep black area at the top so foam movement is visible.
+    headspace = 18
+
+    beer_final_height = int(HEIGHT * 0.80)
+    foam_final_height = HEIGHT - beer_final_height - headspace
+
+    beer_progress = min(progress / 0.80, 1.0)
+    foam_progress = smooth_step((progress - 0.80) / 0.20)
+
+    beer_height = int(beer_final_height * beer_progress)
+    beer_top = HEIGHT - beer_height
+
+    foam_height = int(foam_final_height * foam_progress)
+    foam_bottom = beer_top + 6
+    foam_top = max(headspace, foam_bottom - foam_height)
+
+    if beer_height > 0:
+        draw.rectangle((0, beer_top, WIDTH, HEIGHT), fill=beer_color)
+
+        wave_y = beer_top + 18 + int(7 * math.sin(animation_time * 1.1))
+        if wave_y < HEIGHT:
+            draw.rectangle((0, wave_y, WIDTH, HEIGHT), fill=beer_dark)
+            draw.rectangle((0, wave_y + 14, WIDTH, HEIGHT), fill=beer_color)
+
+        surface_wave = beer_top + int(3 * math.sin(animation_time * 1.7))
+        draw.line((0, surface_wave, WIDTH, surface_wave), fill=beer_light, width=2)
+
+    if foam_height > 0:
+        draw.rectangle((0, foam_top + 10, WIDTH, foam_bottom), fill=foam_color)
+
+        bubble_count = 12
+        for index in range(bubble_count):
+            x = int(index * WIDTH / (bubble_count - 1))
+            radius = 13 + int(5 * math.sin(animation_time * 1.2 + index * 0.7))
+            y = foam_top + 11 + int(6 * math.sin(animation_time * 1.0 + index * 0.55))
+            draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=foam_color)
+
+        boundary = foam_bottom - 3 + int(2 * math.sin(animation_time * 1.4))
+        draw.rectangle((0, boundary, WIDTH, boundary + 4), fill=foam_shadow)
+
+        for index in range(18):
+            x = int((index * 37 + 23) % WIDTH)
+            y_base = foam_top + 12 + ((index * 17) % max(1, foam_height))
+            y = y_base + int(2 * math.sin(animation_time * 1.3 + index))
+            radius = 1 + (index % 3)
+            if headspace + 2 < y < foam_bottom - 4:
+                draw.ellipse((x - radius, y - radius, x + radius, y + radius), outline="#facc15", width=1)
+
+    liquid_top = min(HEIGHT, beer_top + 6)
+    liquid_height = HEIGHT - liquid_top
+    if liquid_height > 12:
+        bubble_columns = (
+            (12, 0.05, 2), (25, 0.22, 3), (38, 0.48, 2),
+            (52, 0.68, 4), (66, 0.15, 2), (79, 0.83, 3),
+            (93, 0.36, 2), (108, 0.58, 5), (123, 0.10, 3),
+            (139, 0.75, 2), (154, 0.27, 4), (169, 0.92, 2),
+            (184, 0.43, 3), (199, 0.62, 2), (214, 0.31, 4),
+            (228, 0.88, 2),
+        )
+        for x, offset, radius in bubble_columns:
+            speed = 15 + radius * 4
+            travel = (animation_time * speed + offset * liquid_height) % liquid_height
+            y = HEIGHT - 6 - travel
+            wobble = int(3 * math.sin(animation_time * 1.8 + x * 0.11))
+            if y > liquid_top + radius:
+                draw.ellipse(
+                    (x + wobble - radius, y - radius, x + wobble + radius, y + radius),
+                    outline=foam_color,
+                    width=1 if radius <= 2 else 2,
+                )
 
 
 class BlackjackGame:
@@ -754,109 +854,243 @@ def temperature_color(value, warning, critical):
     return GREEN
 
 
-def load_config():
-    default_path = Path(__file__).with_name("config.json")
-    path = Path(os.environ.get("JERKMASTER_DISPLAY_CONFIG", default_path))
-    with path.open(encoding="utf-8") as config_file:
-        return json.load(config_file)
+# ====== HARDWARE / APP SETTINGS, no external config.json needed ======
+#
+# Confirmed display pinout:
+#   left  display CS -> CE0 / GPIO8 / physical pin 24
+#   left  display BL -> GPIO5 / physical pin 29
+#   right display CS -> CE1 / GPIO7 / physical pin 26
+#   right display BL -> GPIO6 / physical pin 31
+#
+# Shared lines:
+#   DIN / MOSI -> GPIO10 / pin 19
+#   CLK / SCLK -> GPIO11 / pin 23
+#   DC         -> GPIO25 / pin 22
+#   RST        -> GPIO27 / pin 13
+
+MOONRAKER_URL = "http://127.0.0.1:7125"
+
+SPI_BUS = 0
+SPI_SPEED_HZ = 4000000  # safe confirmed speed; later try 16000000/32000000
+
+LEFT_SPI_DEVICE = 0      # CE0 / GPIO8 / pin 24
+RIGHT_SPI_DEVICE = 1     # CE1 / GPIO7 / pin 26
+
+DC_PIN = 25
+RST_PIN = 27
+
+LEFT_BL_PIN = 5          # GPIO5 / pin 29
+RIGHT_BL_PIN = 6         # GPIO6 / pin 31
+
+BL_ACTIVE_LOW = False    # confirmed: GPIO HIGH = backlight ON
+
+# The final hardware architecture routes action/shutdown buttons to the SKR.
+# Keep this disabled unless a temporary Raspberry Pi test button is connected.
+BLACKJACK_BUTTON_PIN = None
+
+LEFT_ROTATION = 0
+RIGHT_ROTATION = 0
+LEFT_MIRROR = True
+RIGHT_MIRROR = True
+LEFT_FLIP = False
+RIGHT_FLIP = False
+
+REFRESH_SECONDS = 0.08
+TELEMETRY_REFRESH_SECONDS = 2.0
+
+STATUS_DURATION_SECONDS = 45
+LOGO_DURATION_SECONDS = 10
+EYES_DURATION_SECONDS = 18
+BEER_DURATION_SECONDS = 24
+
+BLACKJACK_STAND_TIMEOUT_SECONDS = 7
+BLACKJACK_RESULT_DURATION_SECONDS = 8
+
+SOUNDS_DIR = Path(__file__).resolve().with_name("sounds")
+SOUND_FILES = {
+    "startup": "jerkmaster_startup.wav",
+    "shutdown": "jerkmaster_shutdown.wav",
+    "r2d2": "jerkmaster_r2d2.wav",
+    "beer": "jerkmaster_beer.wav",
+}
+
+
+def play_sound(name):
+    filename = SOUND_FILES.get(name)
+    if not filename:
+        return
+    path = SOUNDS_DIR / filename
+    if not path.exists():
+        return
+    try:
+        subprocess.Popen(
+            ["aplay", "-D", "hw:1,0", str(path)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        pass
+
+
+def open_spi(device):
+    spi = spidev.SpiDev()
+    spi.open(SPI_BUS, int(device))
+    spi.max_speed_hz = int(SPI_SPEED_HZ)
+    spi.mode = 0
+    spi.no_cs = False
+    return spi
 
 
 def main():
-    config = load_config()
-    spi = spidev.SpiDev()
-    spi.open(int(config["spi_bus"]), int(config["spi_device"]))
-    spi.max_speed_hz = int(config["spi_hz"])
-    spi.mode = 0
-    spi.no_cs = True
+    left_spi = open_spi(LEFT_SPI_DEVICE)
+    right_spi = open_spi(RIGHT_SPI_DEVICE)
 
-    dc = OutputDevice(int(config["dc_pin"]), initial_value=True)
-    reset = OutputDevice(int(config["reset_pin"]), initial_value=True)
+    dc = OutputDevice(DC_PIN, initial_value=True)
+    reset = OutputDevice(RST_PIN, initial_value=True)
+
     left = GC9A01(
-        spi, dc, reset,
-        OutputDevice(int(config["left_cs_pin"]), initial_value=True),
-        OutputDevice(int(config["left_backlight_pin"]), initial_value=False),
-        int(config.get("left_rotation", 0)),
+        left_spi,
+        dc,
+        reset,
+        Backlight(LEFT_BL_PIN, BL_ACTIVE_LOW),
+        LEFT_ROTATION,
+        LEFT_MIRROR,
+        LEFT_FLIP,
     )
     right = GC9A01(
-        spi, dc, reset,
-        OutputDevice(int(config["right_cs_pin"]), initial_value=True),
-        OutputDevice(int(config["right_backlight_pin"]), initial_value=False),
-        int(config.get("right_rotation", 0)),
+        right_spi,
+        dc,
+        reset,
+        Backlight(RIGHT_BL_PIN, BL_ACTIVE_LOW),
+        RIGHT_ROTATION,
+        RIGHT_MIRROR,
+        RIGHT_FLIP,
     )
-    blackjack_button_pin = config.get("blackjack_button_pin", 17)
-    blackjack_button = Button(int(blackjack_button_pin), pull_up=True, bounce_time=0.08) if blackjack_button_pin is not None else None
-    reset.off()
-    time.sleep(0.02)
+
+    blackjack_button = (
+        Button(int(BLACKJACK_BUTTON_PIN), pull_up=True, bounce_time=0.08)
+        if BLACKJACK_BUTTON_PIN is not None
+        else None
+    )
+
     reset.on()
-    time.sleep(0.12)
+    time.sleep(0.05)
+    reset.off()
+    time.sleep(0.05)
+    reset.on()
+    time.sleep(0.15)
+
     left.initialize()
     right.initialize()
-    moonraker = Moonraker(config["moonraker_url"])
+
+    moonraker = Moonraker(MOONRAKER_URL)
     logo = load_logo()
     telemetry = Telemetry()
     last_telemetry_read = 0.0
     started_at = time.monotonic()
-    status_duration = float(config["status_duration_seconds"])
-    logo_duration = float(config["logo_duration_seconds"])
-    eyes_duration = float(config["eyes_duration_seconds"])
-    beer_duration = float(config.get("beer_duration_seconds", 8))
-    blackjack_stand_timeout = float(config.get("blackjack_stand_timeout_seconds", 4))
-    blackjack_result_duration = float(config.get("blackjack_result_duration_seconds", 5))
+
     blackjack_game = BlackjackGame()
     blackjack_was_pressed = False
     last_mode = None
+    last_result_sound = None
+    door_was_open = False
+
+    play_sound("startup")
 
     while True:
         now = time.monotonic()
         try:
             telemetry_updated = False
-            if now - last_telemetry_read >= float(config["telemetry_refresh_seconds"]):
+            if now - last_telemetry_read >= TELEMETRY_REFRESH_SECONDS:
                 telemetry = moonraker.read()
                 last_telemetry_read = now
                 telemetry_updated = True
+                if telemetry.door_open and not door_was_open:
+                    play_sound("r2d2")
+                door_was_open = telemetry.door_open
 
             blackjack_pressed = blackjack_button.is_pressed if blackjack_button else False
             if blackjack_pressed and not blackjack_was_pressed and telemetry.running:
                 blackjack_game.press(now)
+                play_sound("r2d2")
             blackjack_was_pressed = blackjack_pressed
+
             if not telemetry.running:
                 blackjack_game.reset()
-            blackjack_game.update(now, blackjack_stand_timeout, blackjack_result_duration)
 
-            if blackjack_game.active:
+            blackjack_game.update(
+                now,
+                BLACKJACK_STAND_TIMEOUT_SECONDS,
+                BLACKJACK_RESULT_DURATION_SECONDS,
+            )
+
+            if telemetry.door_open:
+                mode = "door"
+                left.show(render_offline("DOOR"))
+                right.show(render_offline("OPEN"))
+            elif blackjack_game.active:
                 mode = "blackjack"
-                left.show(render_blackjack_game("left", blackjack_game, now, blackjack_stand_timeout))
-                right.show(render_blackjack_game("right", blackjack_game, now, blackjack_stand_timeout))
+                left.show(render_blackjack_game("left", blackjack_game, now, BLACKJACK_STAND_TIMEOUT_SECONDS))
+                right.show(render_blackjack_game("right", blackjack_game, now, BLACKJACK_STAND_TIMEOUT_SECONDS))
             else:
-                active_beer_duration = beer_duration if telemetry.running else 0
-                cycle_duration = status_duration + logo_duration + eyes_duration + active_beer_duration
+                active_beer_duration = BEER_DURATION_SECONDS
+                cycle_duration = (
+                    STATUS_DURATION_SECONDS
+                    + LOGO_DURATION_SECONDS
+                    + EYES_DURATION_SECONDS
+                    + active_beer_duration
+                )
                 cycle_time = (now - started_at) % cycle_duration
-                if cycle_time < logo_duration:
+
+                if cycle_time < LOGO_DURATION_SECONDS:
                     mode = "logo"
-                    phase = cycle_time / logo_duration
+                    phase = cycle_time / LOGO_DURATION_SECONDS
                     left.show(render_logo(logo, "left", phase))
                     right.show(render_logo(logo, "right", phase))
-                elif cycle_time < logo_duration + status_duration:
+
+                elif cycle_time < LOGO_DURATION_SECONDS + STATUS_DURATION_SECONDS:
                     mode = "status"
                     if telemetry_updated or last_mode != mode:
                         left.show(render_temperature(telemetry))
                         right.show(render_process(telemetry))
-                elif cycle_time < logo_duration + status_duration + eyes_duration:
+
+                elif cycle_time < LOGO_DURATION_SECONDS + STATUS_DURATION_SECONDS + EYES_DURATION_SECONDS:
                     mode = "eyes"
-                    animation_time = cycle_time - logo_duration - status_duration
+                    animation_time = cycle_time - LOGO_DURATION_SECONDS - STATUS_DURATION_SECONDS
                     left.show(render_eye("left", animation_time))
                     right.show(render_eye("right", animation_time))
+
                 else:
                     mode = "beer"
-                    animation_time = cycle_time - logo_duration - status_duration - eyes_duration
-                    left.show(render_beer_progress("left", telemetry, animation_time, beer_duration))
-                    right.show(render_beer_progress("right", telemetry, animation_time, beer_duration))
+                    if last_mode != mode and telemetry.running:
+                        play_sound("beer")
+                    animation_time = (
+                        cycle_time
+                        - LOGO_DURATION_SECONDS
+                        - STATUS_DURATION_SECONDS
+                        - EYES_DURATION_SECONDS
+                    )
+                    left.show(render_beer_progress("left", telemetry, animation_time, BEER_DURATION_SECONDS))
+                    right.show(render_beer_progress("right", telemetry, animation_time, BEER_DURATION_SECONDS))
+
             last_mode = mode
+            normalized_result = telemetry.last_result.upper()
+            if last_result_sound is None:
+                last_result_sound = normalized_result
+            elif (
+                not telemetry.running
+                and normalized_result in {"COMPLETE", "OPERATOR", "EMERGENCY", "SHUTDOWN"}
+                and normalized_result != last_result_sound
+            ):
+                play_sound("shutdown")
+                last_result_sound = normalized_result
+
         except Exception as error:
             message = type(error).__name__.upper()
             left.show(render_offline(message))
             right.show(render_offline("MOONRAKER"))
-        time.sleep(float(config["refresh_seconds"]))
+
+        time.sleep(REFRESH_SECONDS)
 
 
 if __name__ == "__main__":

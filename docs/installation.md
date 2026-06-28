@@ -146,19 +146,28 @@ After `DRYER_ESTOP`, run `FIRMWARE_RESTART`.
 ## 6. Optional Dual Round Status Displays
 
 The display service is read-only and communicates with Moonraker locally. Wire
-both GC9A01 displays as documented in [Wiring Notes](wiring.md), enable SPI, and
-install the service:
+both GC9A01 displays as documented in [Wiring Notes](wiring.md), then install
+the service:
 
 ```bash
-sudo raspi-config nonint do_spi 0
-sudo reboot
-
 JERKMASTER_INSTALL_DISPLAYS=1 /tmp/update-jerkmaster.sh
 ```
 
-The default GPIO assignments and Moonraker URL are stored in
-`/opt/jerkmaster-displays/config.json`. Future runs of the standard updater
-automatically update an already-installed display service.
+The display script uses the confirmed Raspberry Pi SPI0 mapping from
+[Wiring Notes](wiring.md). The current display runtime keeps its active
+hardware constants in the script, so there is no separate display configuration
+layer to keep in sync.
+
+The same display install also copies the optional MAX98357A sound assets to
+`/opt/jerkmaster-displays/sounds/`. After wiring I2S audio, verify playback with:
+
+```bash
+aplay -D hw:1,0 /opt/jerkmaster-displays/sounds/jerkmaster_r2d2.wav
+/opt/jerkmaster-displays/sounds/play_sound.py startup
+```
+
+Future runs of the standard updater automatically update an already-installed
+display service and its sound assets.
 
 Do not expose JerkMaster or Moonraker directly to the public internet. Use a
 trusted LAN or VPN.
