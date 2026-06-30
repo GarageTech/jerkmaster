@@ -74,9 +74,9 @@ This is not a low-voltage toy project. Treat it like real electrical equipment.
 ## Current Front Panel
 
 The current front-panel architecture replaces the original controls with two
-centered round status displays, two continuously powered Noctua cooling fans, a
-power/wake button, an action/safe-shutdown button, and Raspberry Pi sound
-feedback.
+centered round status displays, two Noctua NF-A4x10 FLX electronics-bay cooling
+fans on SKR FAN1/FAN3, a power/wake button, an action/safe-shutdown button, and
+Raspberry Pi sound feedback.
 
 ![JerkMaster front-panel concept](../img/docs/illustrations/front-panel-concept.png)
 
@@ -96,9 +96,8 @@ integrated into the front-panel wiring.
 | ![Dual GC9A01 display board on the bench](../img/docs/build/display-bench-assembly.jpg) | ![Live JerkMaster dual-display test](../img/docs/build/status-displays-live-test.jpg) |
 
 The two fans sit on either side of the displays and provide a direct airflow path
-through the electronics bay. They are not software-controlled: whenever the
-electronics power supply is on, both fans run. This avoids making controller
-cooling dependent on firmware, GPIO state, or a temperature rule.
+through the electronics bay. The current build uses 2 pcs Noctua NF-A4x10 FLX
+connected to SKR FAN1 and FAN3 for electronics-bay cooling.
 
 The power/wake momentary button is used to restart electronics through a BTT
 Power Shutdown Relay V1.2 after relay shutdown. Its switch contacts and LED are

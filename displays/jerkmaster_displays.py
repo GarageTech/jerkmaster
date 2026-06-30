@@ -877,7 +877,7 @@ def temperature_color(value, warning, critical):
 MOONRAKER_URL = "http://127.0.0.1:7125"
 
 SPI_BUS = 0
-SPI_SPEED_HZ = 4000000  # safe confirmed speed; later try 16000000/32000000
+SPI_SPEED_HZ = 32000000  # confirmed speed for the current GC9A01 wiring
 
 LEFT_SPI_DEVICE = 0      # CE0 / GPIO8 / pin 24
 RIGHT_SPI_DEVICE = 1     # CE1 / GPIO7 / pin 26

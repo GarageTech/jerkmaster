@@ -24,10 +24,12 @@ architecture for the reference hardware revision:
 - Two GC9A01 round status displays on Raspberry Pi SPI0.
 - MAX98357A I2S amplifier on Raspberry Pi GPIO18/GPIO19/GPIO21.
 - Factory chamber lighting was 4 pcs 12 V LEDs; JerkMaster control uses the
-  replacement 8x WS2812B NeoPixel chamber-light ring.
+  replacement 8x WS2812B NeoPixel chamber-light line.
 - One momentary power/wake button connected to BTT Relay RESET.
 - One additional momentary action/shutdown button connected to the SKR.
 - Two 12 V-ready button LEDs controlled by SKR MOSFET outputs.
+- Two Noctua NF-A4x10 FLX electronics-bay cooling fans connected to SKR `FAN1`
+  and `FAN3`.
 
 These assignments are based on the current prototype. Verify the actual board
 revision, connector labels, polarity, and wiring before applying power.
@@ -51,7 +53,7 @@ controller. The BTT Relay is only a controlled electronics power switch.
 |---|---|---|
 | Heater SSR input | HE0 | `P2.7` |
 | Circulation fan SSR input | FAN0 | `P2.3` |
-| 8x WS2812B chamber NeoPixel ring | NeoPixel | `P1.24` |
+| 8x WS2812B chamber NeoPixel line | NeoPixel | `P1.24` |
 | BTT Relay V1.2 shutdown / hold signal | Free output / PS_ON line | `P2.0` |
 | Power button LED, 12 V-ready | BED MOSFET | `P2.5` |
 | Action/shutdown button LED, 12 V-ready | HE1 MOSFET | `P2.4` |
@@ -63,6 +65,9 @@ controller. The BTT Relay is only a controlled electronics power switch.
 
 Do not connect LEDs to TH0/TH1 thermistor inputs. Button LEDs are 12 V-ready and
 must be switched only by MOSFET outputs such as BED, HE0, HE1, or FAN outputs.
+
+Electronics-bay cooling uses 2 pcs Noctua NF-A4x10 FLX fans connected to SKR
+`FAN1` and `FAN3`. They are separate from the AC circulation fan on `FAN0`.
 
 ## BTT Power Shutdown Relay V1.2
 
@@ -260,7 +265,7 @@ Confirmed current mapping:
 | Display signal | Left display | Right display | Raspberry Pi BCM | Physical pin |
 |---|---|---|---|---|
 | VCC | Shared | Shared | 3.3 V | pin 17 |
-| GND | Shared | Shared | GND | pin 14 or any GND |
+| GND | Shared | Shared | GND | pin 20 |
 | DIN / MOSI | Shared | Shared | GPIO10 | pin 19 |
 | CLK / SCLK | Shared | Shared | GPIO11 | pin 23 |
 | DC | Shared | Shared | GPIO25 | pin 22 |
@@ -276,7 +281,7 @@ Notes:
 - The left screen is on `SPI_DEVICE = 0`, BL `GPIO5`.
 - The right screen is on `SPI_DEVICE = 1`, BL `GPIO6`.
 - Both screens are mirrored in the current display script.
-- SPI speed `4 MHz` is the confirmed safe speed; higher speeds can be tested later.
+- SPI speed `32 MHz` is confirmed for the current wiring.
 
 ## Raspberry Pi MAX98357A I2S Audio
 
@@ -355,7 +360,7 @@ mains plug as a normal shutdown method.
 ## Critical Safety Requirements
 
 - Verify the exact SSR model, input voltage, output type, load rating, and heatsink requirements.
-- Power the WS2812B ring from a suitable 5 V rail, observe data direction, and verify that total LED current is within the regulator and wiring ratings.
+- Power the WS2812B line from a suitable 5 V rail, observe data direction, and verify that total LED current is within the regulator and wiring ratings.
 - Verify the BTT Relay V1.2 PS_ON / shutdown polarity before relying on automatic power-off.
 - Install an independent one-shot thermal fuse in series with the heater.
 - Install a physical emergency stop that removes heater power.

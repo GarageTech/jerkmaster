@@ -157,7 +157,7 @@ security-related history rewrite does not leave links to superseded commits.
 
 ### Changed
 
-- Replaced the HE1 chamber light output with an 8x WS2812B NeoPixel ring on `P1.24`, controlled through `SET_CHAMBER_LIGHT`.
+- Replaced the HE1 chamber light output with an 8x WS2812B NeoPixel line on `P1.24`, controlled through `SET_CHAMBER_LIGHT`.
 - Added `PS_ON` on `P2.0` for the BTT Relay V1.2 shutdown module and scheduled automatic power-off ten minutes after completed drying.
 - Added a periodic active-drying display scene with an animated filling beer glass, bubbles, progress percentage, and remaining time.
 - Added a Raspberry Pi GPIO17 button that triggers a two-screen blackjack animation only during active drying.
@@ -185,6 +185,7 @@ security-related history rewrite does not leave links to superseded commits.
 - Bumped the project and visible interface version to `0.2.0-alpha` for the current hardware revision.
 - Added display bench-assembly and live dual-display test photographs to the build notes gallery.
 - Implemented Klipper button LED blink/pulse effects, door-open chamber-light and drying-pause behavior, and action-button long-press display events.
+- Corrected the current hardware documentation to describe the chamber light as an 8x WS2812B line, confirm 32 MHz SPI and pin 20 GND for the round displays, keep the VEVOR dehydrator section limited to original hardware, and record the Noctua NF-A4x10 FLX electronics-bay fans on SKR FAN1/FAN3.
 
 ### Fixed
 

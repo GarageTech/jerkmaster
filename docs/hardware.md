@@ -35,8 +35,7 @@ compatibility, sensor behavior, power requirements, and safety limits.
 - AC 220–240 V, 50 Hz, 400 W
 - Reference fan: AC 220 V, approximately 1320 RPM, 660 Ohm
 - Reference heater: AC 220 V, 120 Ohm
-- Original chamber lighting: 4 pcs 12 V LEDs from the factory construction
-- JerkMaster chamber-light retrofit: 8x WS2812B NeoPixel ring on the SKR NeoPixel connector
+- Original chamber lighting: 4 pcs 12 V LEDs
 - Reference sensor: NTC 100K
 
 ## Controller And Compute
@@ -46,6 +45,7 @@ compatibility, sensor behavior, power requirements, and safety limits.
 - USB A-to-B host/controller cable
 - Two 1.28-inch GC9A01 round status displays on Raspberry Pi SPI0
 - MAX98357A I2S amplifier and speaker for Raspberry Pi sound feedback
+- JerkMaster chamber-light retrofit: 8x WS2812B NeoPixel line on the SKR NeoPixel connector
 
 ## Power
 
@@ -55,7 +55,7 @@ compatibility, sensor behavior, power requirements, and safety limits.
 - Power/wake momentary button wired to BTT Relay RESET
 - Action/menu/safe-shutdown momentary button wired to SKR `X_MIN` / `P1.29`
 - Two 12 V-ready button LEDs switched by SKR BED / `P2.5` and HE1 / `P2.4`
-- 8x WS2812B NeoPixel LED ring for chamber illumination
+- 8x WS2812B NeoPixel LED line for chamber illumination
 
 ## Load Switching
 
@@ -74,11 +74,11 @@ compatibility, sensor behavior, power requirements, and safety limits.
 ## Cooling
 
 - Waveshare PI-FAN-3007 or equivalent Raspberry Pi cooling
-- Two Noctua front-panel fans, powered continuously with the electronics
+- 2 pcs Noctua NF-A4x10 FLX electronics-bay cooling fans connected to SKR `FAN1` and `FAN3`
 
-Select the 5 V or 12 V Noctua model to match the chosen supply rail. Do not
-connect a 5 V fan to 12 V. Fuse the fan branch and verify the combined starting
-current before wiring both fans to one supply output.
+These Noctua fans cool the electronics bay, not the drying chamber. Verify the
+selected supply rail, connector polarity, and startup current before applying
+power.
 
 ## AC Distribution
 - Weco 3070-PCM/03-5.033 wecoconnectors.com

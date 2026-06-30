@@ -59,7 +59,8 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 - MAX98357A I2S audio amplifier and speaker
 - BTT Power Shutdown Relay V1.2
 - Two illuminated front-panel buttons and a normally closed door microswitch
-- Factory 4 pcs 12 V chamber LEDs replaced by an 8x WS2812B NeoPixel chamber-light ring
+- 8x WS2812B NeoPixel chamber-light line
+- 2 pcs Noctua NF-A4x10 FLX electronics-bay cooling fans on SKR FAN1 and FAN3
 - Independent thermal fuse, protective earth, breaker, and physical emergency stop
 
 VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentioned here are not sponsors or affiliates of this project. Their hardware was simply useful for the build.

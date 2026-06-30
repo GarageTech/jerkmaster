@@ -121,7 +121,7 @@ SSR outputs.
 
 1. At room temperature, both NTC sensors must report plausible and stable values.
 2. Run `SET_PIN PIN=dryer_fan VALUE=1`, then `SET_PIN PIN=dryer_fan VALUE=0`.
-3. Verify the chamber NeoPixel ring with `SET_CHAMBER_LIGHT ON=1`, then `SET_CHAMBER_LIGHT ON=0`.
+3. Verify the chamber NeoPixel line with `SET_CHAMBER_LIGHT ON=1`, then `SET_CHAMBER_LIGHT ON=0`.
 4. Verify `PS_ON` stays high during normal operation with `SET_PIN PIN=PS_ON VALUE=1`; do not test automatic power-off until the relay behavior is understood.
 5. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
 6. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
