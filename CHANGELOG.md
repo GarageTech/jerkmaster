@@ -184,6 +184,7 @@ security-related history rewrite does not leave links to superseded commits.
 - Finalized the split Raspberry Pi/SKR hardware architecture with SKR-owned button LEDs, concrete door/action inputs, BTT Relay power control, dual GC9A01 display wiring from the display runtime, and MAX98357A sounds used by the display service.
 - Bumped the project and visible interface version to `0.2.0-alpha` for the current hardware revision.
 - Added display bench-assembly and live dual-display test photographs to the build notes gallery.
+- Implemented Klipper button LED blink/pulse effects, door-open chamber-light and drying-pause behavior, and action-button long-press display events.
 
 ### Fixed
 

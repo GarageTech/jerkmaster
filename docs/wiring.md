@@ -97,7 +97,7 @@ does not wait for the button when input power first appears. It auto-starts.
 Recommended shutdown behavior:
 
 ```text
-Shutdown request from UI or long action-button press
+Shutdown request through the `SAFE_SHUTDOWN` Klipper macro
   -> display service plays shutdown sound on the next state update
   -> stop heater
   -> place circulation fan in a safe state
@@ -128,14 +128,14 @@ signal is 5 V and belongs to the BTT Relay input circuit.
 
 Do not connect the BTT RESET 5 V signal directly to Raspberry Pi GPIO.
 
-## Action / Safe Shutdown Button
+## Action Button
 
 The second momentary button is connected to the SKR `X_MIN` input.
 
 | Press type | Function |
 |---|---|
 | Short press | Reserved for future UI action / confirm / menu handling |
-| Long press, about 3 s | Safe shutdown request |
+| Long press, about 3 s | Reserved for local display action |
 
 Current Klipper input:
 
@@ -229,6 +229,7 @@ Implemented behavior when the door opens:
 
 - Turn heater off immediately.
 - Keep circulation fan in a safe state if needed.
+- Pause the active drying stage timer.
 - Show `DOOR OPEN` on the round displays.
 - Play the warning/action sound.
 - Turn the chamber NeoPixel light on.
@@ -246,7 +247,9 @@ release_gcode:
 ```
 
 With the recommended NC wiring, closed-to-GND reads as `DOOR_CLOSED`; an open
-door or broken wire releases the input and runs `DOOR_OPEN`.
+door or broken wire releases the input and runs `DOOR_OPEN`. When the door
+closes, `DRYER_RESUME_AFTER_DOOR` resumes the same drying stage with the saved
+elapsed time and remaining duration.
 
 ## Raspberry Pi Round Displays
 
@@ -329,7 +332,7 @@ the upper `[all]` section, not in the lower Mainsail-specific `[all]` block.
 The current practical safe-cut sequence is:
 
 ```text
-Shutdown request from UI or long action-button press
+Shutdown request through the `SAFE_SHUTDOWN` Klipper macro
   -> stop dryer process
   -> heater output off
   -> circulation fan safe/off

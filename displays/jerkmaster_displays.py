@@ -208,6 +208,8 @@ class Telemetry:
     custom_minutes: float = 0
     last_result: str = "NONE"
     door_open: bool = False
+    blackjack_event: int = 0
+    paused: bool = False
 
 
 class Moonraker:
@@ -242,6 +244,8 @@ class Moonraker:
         elapsed = None
         if stage_started > 0:
             elapsed = max(0, elapsed_before + estimated_time - stage_started)
+        elif number(state.get("paused")) == 1:
+            elapsed = max(0, elapsed_before)
 
         return Telemetry(
             connected=True,
@@ -259,6 +263,8 @@ class Moonraker:
             custom_minutes=number(state.get("custom_minutes")),
             last_result=str(state.get("last_result", "NONE")),
             door_open=number(input_state.get("door_open")) == 1,
+            blackjack_event=int(number(input_state.get("blackjack_event"))),
+            paused=number(state.get("paused")) == 1,
         )
 
 
@@ -994,6 +1000,7 @@ def main():
     last_mode = None
     last_result_sound = None
     door_was_open = False
+    last_blackjack_event = None
 
     play_sound("startup")
 
@@ -1008,6 +1015,13 @@ def main():
                 if telemetry.door_open and not door_was_open:
                     play_sound("r2d2")
                 door_was_open = telemetry.door_open
+                if last_blackjack_event is None:
+                    last_blackjack_event = telemetry.blackjack_event
+                elif telemetry.blackjack_event != last_blackjack_event:
+                    if telemetry.running:
+                        blackjack_game.press(now)
+                        play_sound("r2d2")
+                    last_blackjack_event = telemetry.blackjack_event
 
             blackjack_pressed = blackjack_button.is_pressed if blackjack_button else False
             if blackjack_pressed and not blackjack_was_pressed and telemetry.running:

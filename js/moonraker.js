@@ -225,6 +225,10 @@ function getDryerElapsedSeconds(dryerState, toolhead) {
     const elapsedBeforeStage = Number(dryerState.elapsed_before_stage);
     const estimatedPrintTime = Number(toolhead.estimated_print_time);
 
+    if (Number(dryerState.paused ?? 0) === 1 && Number.isFinite(elapsedBeforeStage)) {
+        return Math.max(0, elapsedBeforeStage);
+    }
+
     if (![stageStartedAt, elapsedBeforeStage, estimatedPrintTime].every(Number.isFinite) || stageStartedAt <= 0) {
         return null;
     }

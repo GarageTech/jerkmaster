@@ -42,7 +42,7 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 - Emergency-stop command.
 - Diagnostic status reporting.
 - SKR-owned button LED effects for ready, running, complete, door-open, emergency, and shutdown states.
-- Door-open handling that turns the heater off, switches the chamber light on, updates the round displays, and plays an audio cue.
+- Door-open handling that pauses the active drying stage, turns the heater off, switches the chamber light on, updates the round displays, and plays an audio cue.
 - MAX98357A sound cues driven by the Raspberry Pi display service.
 - Demo mode for testing the interface without connected hardware.
 - Responsive browser UI with no build step.
