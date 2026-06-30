@@ -4,6 +4,8 @@ set -euo pipefail
 PORT="${JERKMASTER_PORT:-8080}"
 INSTALL_DIR="${JERKMASTER_INSTALL_DIR:-/opt/jerkmaster}"
 SERVICE_FILE="/etc/systemd/system/jerkmaster.service"
+POWEROFF_SCRIPT="/usr/local/sbin/jerkmaster-poweroff-relay.py"
+POWEROFF_SERVICE="/etc/systemd/system/jerkmaster-poweroff-relay.service"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
@@ -37,6 +39,7 @@ for directory in css data img js recipes sounds translations; do
     cp -a -- "${PROJECT_DIR}/${directory}" "${INSTALL_DIR}/${directory}"
 done
 install -m 0755 "${PROJECT_DIR}/tools/raspberry-server.py" "${INSTALL_DIR}/raspberry-server.py"
+install -m 0755 "${PROJECT_DIR}/tools/jerkmaster-poweroff-relay.py" "${POWEROFF_SCRIPT}"
 
 cat >"${SERVICE_FILE}" <<EOF
 [Unit]
@@ -61,8 +64,26 @@ ProtectSystem=strict
 WantedBy=multi-user.target
 EOF
 
+cat >"${POWEROFF_SERVICE}" <<EOF
+[Unit]
+Description=JerkMaster BTT Relay power cut during Raspberry Pi shutdown
+After=moonraker.service klipper.service
+RefuseManualStop=yes
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+ExecStop=/usr/bin/python3 ${POWEROFF_SCRIPT}
+RemainAfterExit=yes
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
 systemctl enable jerkmaster.service
+systemctl enable --now jerkmaster-poweroff-relay.service
 systemctl restart jerkmaster.service
 
 HOSTNAME="$(hostname)"

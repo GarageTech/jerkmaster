@@ -182,6 +182,8 @@
   "diagnostics.moonraker_unavailable": "Moonraker недоступен",
   "diagnostics.klipper_not_ready": "Klipper не готов",
   "diagnostics.emergency_active": "Аварийная остановка активна",
+  "diagnostics.shutdown_pending": "Ожидается выключение",
+  "diagnostics.door_open": "Дверца открыта",
   "diagnostics.rpi_overheating": "Перегрев RPI",
   "diagnostics.electronic_bay_overheating": "Перегрев электроотсека",
   "ingredient_descriptions.salt": "Базовая приправа, усиливающая вкус и помогающая контролировать активность воды.",

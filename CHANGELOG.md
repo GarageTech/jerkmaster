@@ -186,6 +186,9 @@ security-related history rewrite does not leave links to superseded commits.
 - Added display bench-assembly and live dual-display test photographs to the build notes gallery.
 - Implemented Klipper button LED blink/pulse effects, door-open chamber-light and drying-pause behavior, and action-button long-press display events.
 - Corrected the current hardware documentation to describe the chamber light as an 8x WS2812B line, confirm 32 MHz SPI and pin 20 GND for the round displays, keep the VEVOR dehydrator section limited to original hardware, and record the Noctua NF-A4x10 FLX electronics-bay fans on SKR FAN1/FAN3.
+- Corrected the GC9A01 left/right SPI and backlight mapping, added shutdown-pending display and telemetry handling, changed the SKR action-button long press to request staged safe shutdown, and added the Raspberry systemd relay power-cut hook.
+- Added explicit non-blocking sound events for startup, action, warning, completion, and shutdown using the existing MAX98357A `hw:1,0` stereo playback path.
+- Added a dual-display red/green wiring test script and documented the current display, audio, door, button LED, BTT Relay, and safe-shutdown verification commands.
 
 ### Fixed
 

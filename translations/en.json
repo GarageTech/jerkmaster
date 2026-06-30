@@ -57,6 +57,8 @@
   "diagnostics.moonraker_unavailable": "Moonraker unavailable",
   "diagnostics.klipper_not_ready": "Klipper not ready",
   "diagnostics.emergency_active": "Emergency stop active",
+  "diagnostics.shutdown_pending": "Shutdown pending",
+  "diagnostics.door_open": "Door open",
   "diagnostics.rpi_overheating": "RPI overheating",
   "diagnostics.electronic_bay_overheating": "Electronic bay overheating",
   "ui.active_profile": "Active profile",

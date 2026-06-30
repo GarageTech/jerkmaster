@@ -79,8 +79,8 @@ class GC9A01:
     """Minimal GC9A01 driver for hardware SPI CE0/CE1.
 
     Wiring:
-      left  display CS -> GPIO8  / CE0 -> spi.open(0, 0)
-      right display CS -> GPIO7  / CE1 -> spi.open(0, 1)
+      left  display CS -> GPIO7 / CE1 -> spi.open(0, 1)
+      right display CS -> GPIO8 / CE0 -> spi.open(0, 0)
       DC and RST are shared.
     """
 
@@ -208,6 +208,8 @@ class Telemetry:
     custom_minutes: float = 0
     last_result: str = "NONE"
     door_open: bool = False
+    shutdown_pending: bool = False
+    action_event: int = 0
     blackjack_event: int = 0
     paused: bool = False
 
@@ -263,6 +265,8 @@ class Moonraker:
             custom_minutes=number(state.get("custom_minutes")),
             last_result=str(state.get("last_result", "NONE")),
             door_open=number(input_state.get("door_open")) == 1,
+            shutdown_pending=number(input_state.get("shutdown_pending")) == 1,
+            action_event=int(number(input_state.get("action_event"))),
             blackjack_event=int(number(input_state.get("blackjack_event"))),
             paused=number(state.get("paused")) == 1,
         )
@@ -401,6 +405,23 @@ def render_eye(side, animation_time):
         draw.polygon(((38, 35), (202, 35), (202, right_y), (38, left_y)), fill="#000000")
     return image
 
+
+def render_shutdown(side):
+    image = Image.new("RGB", (WIDTH, HEIGHT), "#020507")
+    draw = ImageDraw.Draw(image)
+    draw.arc((10, 10, 230, 230), 25, 335, fill="#334155", width=8)
+    draw.arc((10, 10, 230, 230), 205, 335, fill=CYAN, width=8)
+
+    if side == "left":
+        draw.arc((58, 83, 112, 129), 15, 165, fill=WHITE, width=7)
+        draw.arc((128, 83, 182, 129), 15, 165, fill=WHITE, width=7)
+        centered(draw, (120, 158), "SAVING", FONTS["medium"], CYAN)
+        centered(draw, (120, 190), "POWER DOWN", FONTS["small"], MUTED)
+    else:
+        centered(draw, (120, 86), "GOOD", FONTS["logo"], WHITE)
+        centered(draw, (120, 124), "BYE", FONTS["logo"], CYAN)
+        centered(draw, (120, 172), "WAIT...", FONTS["label"], MUTED)
+    return image
 
 
 def render_beer_progress(side, telemetry, animation_time, scene_duration=8.0):
@@ -863,10 +884,10 @@ def temperature_color(value, warning, critical):
 # ====== HARDWARE / APP SETTINGS, no external config.json needed ======
 #
 # Confirmed display pinout:
-#   left  display CS -> CE0 / GPIO8 / physical pin 24
-#   left  display BL -> GPIO5 / physical pin 29
-#   right display CS -> CE1 / GPIO7 / physical pin 26
-#   right display BL -> GPIO6 / physical pin 31
+#   left  display CS -> CE1 / GPIO7 / physical pin 26
+#   left  display BL -> GPIO6 / physical pin 31
+#   right display CS -> CE0 / GPIO8 / physical pin 24
+#   right display BL -> GPIO5 / physical pin 29
 #
 # Shared lines:
 #   DIN / MOSI -> GPIO10 / pin 19
@@ -877,16 +898,16 @@ def temperature_color(value, warning, critical):
 MOONRAKER_URL = "http://127.0.0.1:7125"
 
 SPI_BUS = 0
-SPI_SPEED_HZ = 32000000  # confirmed speed for the current GC9A01 wiring
+SPI_SPEED_HZ = 32000000  # confirmed; use 4000000 as a safe debug speed
 
-LEFT_SPI_DEVICE = 0      # CE0 / GPIO8 / pin 24
-RIGHT_SPI_DEVICE = 1     # CE1 / GPIO7 / pin 26
+LEFT_SPI_DEVICE = 1      # CE1 / GPIO7 / pin 26
+RIGHT_SPI_DEVICE = 0     # CE0 / GPIO8 / pin 24
 
 DC_PIN = 25
 RST_PIN = 27
 
-LEFT_BL_PIN = 5          # GPIO5 / pin 29
-RIGHT_BL_PIN = 6         # GPIO6 / pin 31
+LEFT_BL_PIN = 6          # GPIO6 / pin 31
+RIGHT_BL_PIN = 5         # GPIO5 / pin 29
 
 BL_ACTIVE_LOW = False    # confirmed: GPIO HIGH = backlight ON
 
@@ -916,6 +937,9 @@ SOUNDS_DIR = Path(__file__).resolve().with_name("sounds")
 SOUND_FILES = {
     "startup": "jerkmaster_startup.wav",
     "shutdown": "jerkmaster_shutdown.wav",
+    "action": "jerkmaster_r2d2.wav",
+    "error": "jerkmaster_r2d2.wav",
+    "complete": "jerkmaster_shutdown.wav",
     "r2d2": "jerkmaster_r2d2.wav",
     "beer": "jerkmaster_beer.wav",
 }
@@ -1000,6 +1024,8 @@ def main():
     last_mode = None
     last_result_sound = None
     door_was_open = False
+    shutdown_was_pending = False
+    last_action_event = None
     last_blackjack_event = None
 
     play_sound("startup")
@@ -1012,21 +1038,28 @@ def main():
                 telemetry = moonraker.read()
                 last_telemetry_read = now
                 telemetry_updated = True
+                if telemetry.shutdown_pending and not shutdown_was_pending:
+                    play_sound("shutdown")
+                shutdown_was_pending = telemetry.shutdown_pending
                 if telemetry.door_open and not door_was_open:
-                    play_sound("r2d2")
+                    play_sound("error")
                 door_was_open = telemetry.door_open
+                if last_action_event is None:
+                    last_action_event = telemetry.action_event
+                elif telemetry.action_event != last_action_event:
+                    play_sound("action")
+                    last_action_event = telemetry.action_event
                 if last_blackjack_event is None:
                     last_blackjack_event = telemetry.blackjack_event
                 elif telemetry.blackjack_event != last_blackjack_event:
                     if telemetry.running:
                         blackjack_game.press(now)
-                        play_sound("r2d2")
                     last_blackjack_event = telemetry.blackjack_event
 
             blackjack_pressed = blackjack_button.is_pressed if blackjack_button else False
             if blackjack_pressed and not blackjack_was_pressed and telemetry.running:
                 blackjack_game.press(now)
-                play_sound("r2d2")
+                play_sound("action")
             blackjack_was_pressed = blackjack_pressed
 
             if not telemetry.running:
@@ -1038,7 +1071,11 @@ def main():
                 BLACKJACK_RESULT_DURATION_SECONDS,
             )
 
-            if telemetry.door_open:
+            if telemetry.shutdown_pending:
+                mode = "shutdown"
+                left.show(render_shutdown("left"))
+                right.show(render_shutdown("right"))
+            elif telemetry.door_open:
                 mode = "door"
                 left.show(render_offline("DOOR"))
                 right.show(render_offline("OPEN"))
@@ -1096,7 +1133,7 @@ def main():
                 and normalized_result in {"COMPLETE", "OPERATOR", "EMERGENCY", "SHUTDOWN"}
                 and normalized_result != last_result_sound
             ):
-                play_sound("shutdown")
+                play_sound("complete" if normalized_result == "COMPLETE" else "shutdown")
                 last_result_sound = normalized_result
 
         except Exception as error:

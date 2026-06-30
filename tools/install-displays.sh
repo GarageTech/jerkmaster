@@ -15,6 +15,7 @@ apt-get install -y alsa-utils python3-gpiozero python3-pil python3-spidev fonts-
 
 install -d -m 0755 "${INSTALL_DIR}"
 install -m 0755 "${PROJECT_DIR}/displays/jerkmaster_displays.py" "${INSTALL_DIR}/jerkmaster_displays.py"
+install -m 0755 "${PROJECT_DIR}/displays/display_test.py" "${INSTALL_DIR}/display_test.py"
 install -m 0644 "${PROJECT_DIR}/img/logo.png" "${INSTALL_DIR}/logo.png"
 
 install -d -m 0755 "${INSTALL_DIR}/sounds"
@@ -44,3 +45,4 @@ systemctl enable --now jerkmaster-displays.service
 echo "Display service installed. Check it with:"
 echo "  sudo systemctl status jerkmaster-displays"
 echo "  sudo journalctl -u jerkmaster-displays -f"
+echo "Display wiring test: sudo systemctl stop jerkmaster-displays && sudo ${INSTALL_DIR}/display_test.py"

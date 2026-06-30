@@ -47,6 +47,8 @@ The updater downloads a temporary ZIP archive, backs up the active `macros.cfg`,
 installs the current macros, copies the interface to `/opt/jerkmaster`, installs
 `jerkmaster.service`, and starts it automatically at boot. It removes its
 temporary files when finished. Run the same commands for future updates.
+The installer also enables `jerkmaster-poweroff-relay.service`, which releases
+the BTT Relay `PS_ON` output late during Raspberry Pi shutdown.
 
 User-created and edited ingredients, recipes, and profiles are stored separately
 in `/var/lib/jerkmaster/user-data/`. This directory survives interface updates
@@ -125,8 +127,9 @@ SSR outputs.
 4. Verify `PS_ON` stays high during normal operation with `SET_PIN PIN=PS_ON VALUE=1`; do not test automatic power-off until the relay behavior is understood.
 5. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
 6. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
-7. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
-8. Verify the web-interface E-STOP button.
+7. Verify that `SAFE_SHUTDOWN` sets the shutdown-pending display state before any relay power cut test.
+8. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
+9. Verify the web-interface E-STOP button.
 
 Only connect mains-powered loads after these checks and after the installation
 has been reviewed by a qualified electrician.
@@ -162,8 +165,18 @@ The same display install also copies the optional MAX98357A sound assets to
 `/opt/jerkmaster-displays/sounds/`. After wiring I2S audio, verify playback with:
 
 ```bash
-aplay -D hw:1,0 /opt/jerkmaster-displays/sounds/jerkmaster_r2d2.wav
+speaker-test -D hw:1,0 -c 2 -t sine
 /opt/jerkmaster-displays/sounds/play_sound.py startup
+/opt/jerkmaster-displays/sounds/play_sound.py action
+```
+
+To test the display wiring, stop the display service and paint the confirmed
+left display red and right display green:
+
+```bash
+sudo systemctl stop jerkmaster-displays
+sudo /opt/jerkmaster-displays/display_test.py
+sudo systemctl start jerkmaster-displays
 ```
 
 Future runs of the standard updater automatically update an already-installed

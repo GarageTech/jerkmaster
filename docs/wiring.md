@@ -103,16 +103,20 @@ Recommended shutdown behavior:
 
 ```text
 Shutdown request through the `SAFE_SHUTDOWN` Klipper macro
-  -> display service plays shutdown sound on the next state update
   -> stop heater
-  -> place circulation fan in a safe state
-  -> send SET_PIN PIN=PS_ON VALUE=0
+  -> set the circulation fan safe/off
+  -> set `INPUT_STATE.shutdown_pending=1`
+  -> display service shows the shutdown screen and plays the shutdown sound
+  -> request Moonraker `shutdown_machine`
+  -> systemd shutdown service releases `PS_ON` late during Raspberry shutdown
+  -> delayed Klipper fallback releases `PS_ON` after 45 seconds if needed
   -> BTT Relay removes electronics power
 ```
 
-The current Klipper macro performs the load shutdown and `PS_ON` cut. Filesystem
-sync or a full Linux halt must be handled by Raspberry-side service logic if a
-future deployment requires that extra shutdown path.
+The Klipper macro must not immediately cut `PS_ON`. The installed Raspberry
+service `jerkmaster-poweroff-relay.service` runs during host shutdown and sends
+`SET_PIN PIN=PS_ON VALUE=0` to local Moonraker while Moonraker is still
+available. The 45-second Klipper fallback is only a backup path.
 
 Do not use the BTT Relay as the only heater safety disconnect. It controls
 electronics power only.
@@ -139,8 +143,8 @@ The second momentary button is connected to the SKR `X_MIN` input.
 
 | Press type | Function |
 |---|---|
-| Short press | Reserved for future UI action / confirm / menu handling |
-| Long press, about 3 s | Reserved for local display action |
+| Short press | Local action / confirm / menu / display event |
+| Long press, about 3 s | Request `SAFE_SHUTDOWN` |
 
 Current Klipper input:
 
@@ -270,17 +274,17 @@ Confirmed current mapping:
 | CLK / SCLK | Shared | Shared | GPIO11 | pin 23 |
 | DC | Shared | Shared | GPIO25 | pin 22 |
 | RST | Shared | Shared | GPIO27 | pin 13 |
-| CS | CE0 | - | GPIO8 | pin 24 |
-| CS | - | CE1 | GPIO7 | pin 26 |
-| BL | GPIO5 | - | GPIO5 | pin 29 |
-| BL | - | GPIO6 | GPIO6 | pin 31 |
+| CS | CE1 | - | GPIO7 | pin 26 |
+| CS | - | CE0 | GPIO8 | pin 24 |
+| BL | GPIO6 | - | GPIO6 | pin 31 |
+| BL | - | GPIO5 | GPIO5 | pin 29 |
 
 Notes:
 
 - `BL_ACTIVE_LOW = False` is confirmed for the current display modules.
-- The left screen is on `SPI_DEVICE = 0`, BL `GPIO5`.
-- The right screen is on `SPI_DEVICE = 1`, BL `GPIO6`.
-- Both screens are mirrored in the current display script.
+- The left screen is on `SPI_DEVICE = 1`, BL `GPIO6`.
+- The right screen is on `SPI_DEVICE = 0`, BL `GPIO5`.
+- `RIGHT_MIRROR = True` is confirmed in the current display script.
 - SPI speed `32 MHz` is confirmed for the current wiring.
 
 ## Raspberry Pi MAX98357A I2S Audio
@@ -324,9 +328,14 @@ The display service plays the installed sounds directly:
 | Event | Sound |
 |---|---|
 | Display service startup | `jerkmaster_startup.wav` |
+| Action button press | `jerkmaster_r2d2.wav` |
+| Door open / warning | `jerkmaster_r2d2.wav` |
 | Active drying beer scene starts | `jerkmaster_beer.wav` |
-| Temporary Raspberry test/game button, if enabled | `jerkmaster_r2d2.wav` |
+| Local action feedback | `jerkmaster_r2d2.wav` |
 | Completed, stopped, emergency, or shutdown result | `jerkmaster_shutdown.wav` |
+
+Playback uses ALSA device `hw:1,0` with stereo output. Mono `-c 1` is not
+supported on the current MAX98357A card.
 
 Important config note: on the current system, I2S overlay placement in
 `/boot/firmware/config.txt` matters. The working I2S configuration was added in
@@ -343,15 +352,16 @@ Shutdown request through the `SAFE_SHUTDOWN` Klipper macro
   -> circulation fan safe/off
   -> chamber light off
   -> button LEDs enter shutdown-pending pattern
-  -> display service plays shutdown sound on the next state update
-  -> SET_PIN PIN=PS_ON VALUE=0
+  -> displays show the shutdown screen and play the shutdown sound
+  -> Moonraker is asked to run `shutdown_machine`
+  -> Raspberry shutdown syncs/stops services
+  -> `jerkmaster-poweroff-relay.service` sends `SET_PIN PIN=PS_ON VALUE=0`
   -> BTT Relay removes electronics power
 ```
 
-This is not the same as a full PC-style soft shutdown. It is a controlled
-Klipper/Moonraker power cut for the BTT Relay. Add Raspberry-side filesystem
-sync/halt logic later if the installation needs a full Linux shutdown path
-before relay release.
+This is a software-controlled safe shutdown path. Do not pull the mains plug as
+the normal shutdown method. If Moonraker host shutdown is unavailable, the
+Klipper fallback releases `PS_ON` after 45 seconds.
 
 The exact implementation can be done through Moonraker remote methods, a
 Klipper macro, and/or a systemd shutdown service. Do not rely on pulling the

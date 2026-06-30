@@ -9,6 +9,9 @@ SOUND_DIR = Path(__file__).resolve().parent
 SOUNDS = {
     "startup": "jerkmaster_startup.wav",
     "shutdown": "jerkmaster_shutdown.wav",
+    "action": "jerkmaster_r2d2.wav",
+    "error": "jerkmaster_r2d2.wav",
+    "complete": "jerkmaster_shutdown.wav",
     "r2d2": "jerkmaster_r2d2.wav",
     "beer": "jerkmaster_beer.wav",
 }

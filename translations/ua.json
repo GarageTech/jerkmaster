@@ -58,6 +58,8 @@
   "diagnostics.moonraker_unavailable": "Moonraker недоступний",
   "diagnostics.klipper_not_ready": "Klipper не готовий",
   "diagnostics.emergency_active": "Аварійна зупинка активна",
+  "diagnostics.shutdown_pending": "Очікується вимкнення",
+  "diagnostics.door_open": "Дверцята відчинені",
   "diagnostics.rpi_overheating": "Перегрів RPI",
   "diagnostics.electronic_bay_overheating": "Перегрів електровідсіку",
   "ui.salinity_hint": "Сіль з урахуванням соєвого соусу",

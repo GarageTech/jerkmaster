@@ -517,6 +517,8 @@ function detectDiagnostics(telemetry, snapshot) {
     else if (!telemetry.mcuConnected) diagnostics.push(["danger", "klipper_not_ready", telemetry.klipperMessage]);
     if (telemetry.connected && [telemetry.currentTemp, telemetry.electronicsTemp, telemetry.cpuTemp].some(isInvalidSensorValue)) diagnostics.push(["danger", "sensor_disconnected"]);
     if (snapshot.state === "emergency" || /emergency|m112/i.test(telemetry.klipperMessage)) diagnostics.push(["danger", "emergency_active"]);
+    if (telemetry.shutdownPending) diagnostics.push(["warning", "shutdown_pending"]);
+    if (telemetry.doorOpen) diagnostics.push(["warning", "door_open"]);
     if (telemetry.cpuTemp >= DIAGNOSTIC_LIMITS.rpiCritical) diagnostics.push(["danger", "rpi_overheating"]);
     if (telemetry.electronicsTemp >= DIAGNOSTIC_LIMITS.electronicsCritical) diagnostics.push(["danger", "electronic_bay_overheating"]);
     else if (telemetry.electronicsTemp >= DIAGNOSTIC_LIMITS.electronicsWarning) diagnostics.push(["warning", "electronics_bay_high"]);

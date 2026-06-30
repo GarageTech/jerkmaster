@@ -26,6 +26,8 @@ export class DemoMoonrakerClient {
             dryerElapsedSeconds: null,
             dryerCustomTemp: 0,
             dryerCustomMinutes: 0,
+            doorOpen: false,
+            shutdownPending: false,
             cpuTemp: 42 + Math.sin(elapsed / 9) * 1.5,
             electronicsTemp: 35 + Math.cos(elapsed / 11) * 1.2,
             currentTemp,
@@ -70,6 +72,8 @@ export class MoonrakerClient {
         dryerElapsedSeconds: null,
         dryerCustomTemp: 0,
         dryerCustomMinutes: 0,
+        doorOpen: false,
+        shutdownPending: false,
         cpuTemp: 0,
         electronicsTemp: 0,
         currentTemp: 0,
@@ -98,6 +102,7 @@ export class MoonrakerClient {
             "output_pin dryer_fan",
             "gcode_macro CHAMBER_LIGHT_STATE",
             "gcode_macro DRYER_STATE",
+            "gcode_macro INPUT_STATE",
             "toolhead",
             "webhooks"
         ].map(encodeURIComponent).join("&");
@@ -120,6 +125,7 @@ export class MoonrakerClient {
             const fan = status["output_pin dryer_fan"] ?? {};
             const light = status["gcode_macro CHAMBER_LIGHT_STATE"] ?? {};
             const dryerState = status["gcode_macro DRYER_STATE"] ?? {};
+            const inputState = status["gcode_macro INPUT_STATE"] ?? {};
             const toolhead = status.toolhead ?? {};
             const webhooks = status.webhooks ?? {};
             const klipperState = String(serverInfo.klippy_state ?? webhooks.state ?? "disconnected");
@@ -139,6 +145,8 @@ export class MoonrakerClient {
                 dryerElapsedSeconds: getDryerElapsedSeconds(dryerState, toolhead),
                 dryerCustomTemp: Number(dryerState.custom_temp ?? 0),
                 dryerCustomMinutes: Number(dryerState.custom_minutes ?? 0),
+                doorOpen: Number(inputState.door_open ?? 0) === 1,
+                shutdownPending: Number(inputState.shutdown_pending ?? 0) === 1,
                 cpuTemp: Number(cpu.temperature ?? 0),
                 electronicsTemp: Number(bay.temperature ?? 0),
                 currentTemp: Number(heater.temperature ?? 0),
