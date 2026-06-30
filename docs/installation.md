@@ -127,9 +127,11 @@ SSR outputs.
 4. Verify `PS_ON` stays high during normal operation with `SET_PIN PIN=PS_ON VALUE=1`; do not test automatic power-off until the relay behavior is understood.
 5. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
 6. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
-7. Verify that `SAFE_SHUTDOWN` sets the shutdown-pending display state before any relay power cut test.
-8. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
-9. Verify the web-interface E-STOP button.
+7. Verify the Raspberry GPIO17 user button: a short press plays the action
+   sound and a long press shows the shutdown-pending display state.
+8. Verify that `SAFE_SHUTDOWN` sets the shutdown-pending display state before any relay power cut test.
+9. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
+10. Verify the web-interface E-STOP button.
 
 Only connect mains-powered loads after these checks and after the installation
 has been reviewed by a qualified electrician.

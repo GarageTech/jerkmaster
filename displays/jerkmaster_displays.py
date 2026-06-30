@@ -209,8 +209,6 @@ class Telemetry:
     last_result: str = "NONE"
     door_open: bool = False
     shutdown_pending: bool = False
-    action_event: int = 0
-    blackjack_event: int = 0
     paused: bool = False
 
 
@@ -266,10 +264,19 @@ class Moonraker:
             last_result=str(state.get("last_result", "NONE")),
             door_open=number(input_state.get("door_open")) == 1,
             shutdown_pending=number(input_state.get("shutdown_pending")) == 1,
-            action_event=int(number(input_state.get("action_event"))),
-            blackjack_event=int(number(input_state.get("blackjack_event"))),
             paused=number(state.get("paused")) == 1,
         )
+
+    def run_gcode(self, script, timeout=3):
+        url = f"{self.base_url}/printer/gcode/script?script={urllib.parse.quote(script)}"
+        request = urllib.request.Request(url, data=b"", method="POST")
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            response.read()
+
+    def shutdown_machine(self, timeout=3):
+        request = urllib.request.Request(f"{self.base_url}/machine/shutdown", data=b"", method="POST")
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            response.read()
 
 
 def number(value):
@@ -911,9 +918,9 @@ RIGHT_BL_PIN = 5         # GPIO5 / pin 29
 
 BL_ACTIVE_LOW = False    # confirmed: GPIO HIGH = backlight ON
 
-# The final hardware architecture routes action/shutdown buttons to the SKR.
-# Keep this disabled unless a temporary Raspberry Pi test button is connected.
-BLACKJACK_BUTTON_PIN = None
+# Main user/action button: GPIO17 / physical pin 11 to GND, internal pull-up.
+USER_BUTTON_PIN = 17
+USER_BUTTON_LONG_PRESS_SECONDS = 2.8
 
 LEFT_ROTATION = 0
 RIGHT_ROTATION = 0
@@ -962,6 +969,40 @@ def play_sound(name):
         pass
 
 
+def request_safe_shutdown(moonraker):
+    script = "\n".join(
+        (
+            "SET_GCODE_VARIABLE MACRO=INPUT_STATE VARIABLE=shutdown_pending VALUE=1",
+            "STOP_DRYING REASON=shutdown",
+            "SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=0",
+            "SET_PIN PIN=dryer_fan VALUE=0",
+            "SET_CHAMBER_LIGHT ON=0",
+            "UPDATE_DELAYED_GCODE ID=BUTTON_LED_EFFECTS DURATION=0.01",
+            "UPDATE_DELAYED_GCODE ID=SAFE_SHUTDOWN_RELAY_FALLBACK DURATION=45",
+        )
+    )
+    moonraker.run_gcode(script)
+    moonraker.shutdown_machine()
+
+
+def request_local_poweroff():
+    try:
+        subprocess.Popen(
+            ["systemctl", "poweroff"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        try:
+            subprocess.Popen(
+                ["/sbin/poweroff"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError:
+            pass
+
+
 def open_spi(device):
     spi = spidev.SpiDev()
     spi.open(SPI_BUS, int(device))
@@ -997,11 +1038,7 @@ def main():
         RIGHT_FLIP,
     )
 
-    blackjack_button = (
-        Button(int(BLACKJACK_BUTTON_PIN), pull_up=True, bounce_time=0.08)
-        if BLACKJACK_BUTTON_PIN is not None
-        else None
-    )
+    user_button = Button(int(USER_BUTTON_PIN), pull_up=True, bounce_time=0.05)
 
     reset.on()
     time.sleep(0.05)
@@ -1020,13 +1057,14 @@ def main():
     started_at = time.monotonic()
 
     blackjack_game = BlackjackGame()
-    blackjack_was_pressed = False
+    user_button_was_pressed = False
+    user_button_pressed_at = 0.0
+    user_button_long_press_fired = False
+    local_shutdown_pending = False
     last_mode = None
     last_result_sound = None
     door_was_open = False
     shutdown_was_pending = False
-    last_action_event = None
-    last_blackjack_event = None
 
     play_sound("startup")
 
@@ -1044,23 +1082,41 @@ def main():
                 if telemetry.door_open and not door_was_open:
                     play_sound("error")
                 door_was_open = telemetry.door_open
-                if last_action_event is None:
-                    last_action_event = telemetry.action_event
-                elif telemetry.action_event != last_action_event:
-                    play_sound("action")
-                    last_action_event = telemetry.action_event
-                if last_blackjack_event is None:
-                    last_blackjack_event = telemetry.blackjack_event
-                elif telemetry.blackjack_event != last_blackjack_event:
+
+            user_button_pressed = user_button.is_pressed
+            if user_button_pressed and not user_button_was_pressed:
+                user_button_pressed_at = now
+                user_button_long_press_fired = False
+                play_sound("action")
+                try:
+                    moonraker.run_gcode("SET_PIN PIN=action_button_led VALUE=1", timeout=1)
+                except Exception:
+                    pass
+
+            if (
+                user_button_pressed
+                and not user_button_long_press_fired
+                and now - user_button_pressed_at >= USER_BUTTON_LONG_PRESS_SECONDS
+            ):
+                user_button_long_press_fired = True
+                local_shutdown_pending = True
+                play_sound("shutdown")
+                try:
+                    request_safe_shutdown(moonraker)
+                except Exception:
+                    request_local_poweroff()
+
+            if not user_button_pressed and user_button_was_pressed:
+                try:
+                    moonraker.run_gcode("UPDATE_DELAYED_GCODE ID=BUTTON_LED_EFFECTS DURATION=0.01", timeout=1)
+                except Exception:
+                    pass
+                if not user_button_long_press_fired:
                     if telemetry.running:
                         blackjack_game.press(now)
-                    last_blackjack_event = telemetry.blackjack_event
+                user_button_pressed_at = 0.0
 
-            blackjack_pressed = blackjack_button.is_pressed if blackjack_button else False
-            if blackjack_pressed and not blackjack_was_pressed and telemetry.running:
-                blackjack_game.press(now)
-                play_sound("action")
-            blackjack_was_pressed = blackjack_pressed
+            user_button_was_pressed = user_button_pressed
 
             if not telemetry.running:
                 blackjack_game.reset()
@@ -1071,7 +1127,7 @@ def main():
                 BLACKJACK_RESULT_DURATION_SECONDS,
             )
 
-            if telemetry.shutdown_pending:
+            if local_shutdown_pending or telemetry.shutdown_pending:
                 mode = "shutdown"
                 left.show(render_shutdown("left"))
                 right.show(render_shutdown("right"))
@@ -1137,9 +1193,13 @@ def main():
                 last_result_sound = normalized_result
 
         except Exception as error:
-            message = type(error).__name__.upper()
-            left.show(render_offline(message))
-            right.show(render_offline("MOONRAKER"))
+            if local_shutdown_pending:
+                left.show(render_shutdown("left"))
+                right.show(render_shutdown("right"))
+            else:
+                message = type(error).__name__.upper()
+                left.show(render_offline(message))
+                right.show(render_offline("MOONRAKER"))
 
         time.sleep(REFRESH_SECONDS)
 

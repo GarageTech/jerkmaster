@@ -42,6 +42,7 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 - Emergency-stop command.
 - Diagnostic status reporting.
 - SKR-owned button LED effects for ready, running, complete, door-open, emergency, and shutdown states.
+- Raspberry Pi GPIO17 user/action button with short-press action handling and long-press safe shutdown request.
 - Door-open handling that pauses the active drying stage, turns the heater off, switches the chamber light on, updates the round displays, blinks the action LED, and plays an audio cue.
 - Staged safe shutdown that sets a shutdown-pending state, asks Moonraker to shut down the Raspberry Pi, and releases the BTT Relay from a systemd shutdown hook or delayed fallback.
 - MAX98357A sound cues driven by the Raspberry Pi display service.
@@ -72,7 +73,7 @@ VEVOR, Raspberry Pi, BTT, Omron, Mean Well, and the other manufacturers mentione
 |---|---|
 | Browser UI | Dashboard, calculators, CRUD editors, translations, telemetry, diagnostics |
 | Moonraker | HTTP API between the browser and Klipper |
-| Klipper | Heater/fan control, sensors, button LEDs, door/action inputs, shutdown-pending state, PS_ON, safety limits, and non-blocking drying macros |
+| Klipper | Heater/fan control, sensors, door input, button LEDs, shutdown-pending state, PS_ON, safety limits, and non-blocking drying macros |
 | Klipper `DRYER_STATE` | Authoritative active recipe, profile, stage, settings, and elapsed time |
 | Raspberry user-data files | User-created and edited ingredients, recipes, and profiles shared by every browser |
 | Browser local storage | Language preference for that browser |

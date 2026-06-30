@@ -53,7 +53,7 @@ compatibility, sensor behavior, power requirements, and safety limits.
 - Mean Well LRS-150-12
 - BTT Power Shutdown Relay V1.2 for normal electronics power control
 - Power/wake momentary button wired to BTT Relay RESET
-- Action/menu/safe-shutdown momentary button wired to SKR `X_MIN` / `P1.29`
+- Action/menu/safe-shutdown momentary button wired to Raspberry Pi GPIO17 / physical pin 11
 - Two 12 V-ready button LEDs switched by SKR BED / `P2.5` and HE1 / `P2.4`
 - 8x WS2812B NeoPixel LED line for chamber illumination
 
@@ -69,7 +69,7 @@ compatibility, sensor behavior, power requirements, and safety limits.
 - EPCOS 100K NTC for drying chamber
 - EPCOS 100K NTC for electronics bay
 - Raspberry Pi SoC temperature sensor
-- Normally closed door microswitch wired to SKR `Y_MIN` / `P1.27`
+- Normally closed door microswitch wired to SKR `Z-STOP` / `P1.29`
 
 ## Cooling
 

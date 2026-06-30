@@ -108,7 +108,9 @@ electrically separate:
   electronics supply;
 - the power button LED is driven from 12 V through the SKR BED MOSFET output;
 - the action button LED is driven from 12 V through the SKR HE1 MOSFET output;
-- the action button contacts and door microswitch are handled by SKR inputs.
+- the action button contacts are handled by Raspberry Pi GPIO17 with an internal
+  pull-up;
+- the normally closed door microswitch is handled by the SKR Z-STOP input.
 
 The buttons are normal power and interface controls, not emergency stops. They
 must not replace the physical E-stop, independent thermal fuse, breaker,

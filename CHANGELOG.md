@@ -189,6 +189,8 @@ security-related history rewrite does not leave links to superseded commits.
 - Corrected the GC9A01 left/right SPI and backlight mapping, added shutdown-pending display and telemetry handling, changed the SKR action-button long press to request staged safe shutdown, and added the Raspberry systemd relay power-cut hook.
 - Added explicit non-blocking sound events for startup, action, warning, completion, and shutdown using the existing MAX98357A `hw:1,0` stereo playback path.
 - Added a dual-display red/green wiring test script and documented the current display, audio, door, button LED, BTT Relay, and safe-shutdown verification commands.
+- Moved the user/action button to Raspberry Pi GPIO17 with internal pull-up handling, kept BTT Relay RESET as wake/restart only, and moved the NC door switch to SKR Z-STOP / `P1.29`.
+- Removed SKR action-button short/long-press assumptions while keeping SKR ownership of the door switch, button LED MOSFETs, heater/fan outputs, and `PS_ON`.
 
 ### Fixed
 
