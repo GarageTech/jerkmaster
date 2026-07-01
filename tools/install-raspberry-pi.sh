@@ -66,24 +66,23 @@ EOF
 
 cat >"${POWEROFF_SERVICE}" <<EOF
 [Unit]
-Description=JerkMaster BTT Relay power cut during Raspberry Pi shutdown
-After=moonraker.service klipper.service
-RefuseManualStop=yes
+Description=JerkMaster BTT Relay power cut on halt/poweroff only
+DefaultDependencies=no
+Before=poweroff.target halt.target shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/true
-ExecStop=/usr/bin/python3 ${POWEROFF_SCRIPT}
-RemainAfterExit=yes
-TimeoutStopSec=15
+ExecStart=/usr/bin/python3 ${POWEROFF_SCRIPT}
+TimeoutStartSec=15
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=poweroff.target halt.target
 EOF
 
 systemctl daemon-reload
 systemctl enable jerkmaster.service
-systemctl enable --now jerkmaster-poweroff-relay.service
+systemctl disable jerkmaster-poweroff-relay.service >/dev/null 2>&1 || true
+systemctl enable jerkmaster-poweroff-relay.service
 systemctl restart jerkmaster.service
 
 HOSTNAME="$(hostname)"

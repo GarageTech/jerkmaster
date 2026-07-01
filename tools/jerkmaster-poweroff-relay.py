@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Release the BTT relay from the Raspberry Pi late in system shutdown."""
+"""Release the BTT relay only during Linux poweroff/halt, never during reboot."""
 
+import subprocess
 import sys
 import time
 import urllib.parse
@@ -10,6 +11,30 @@ import urllib.request
 
 MOONRAKER_GCODE_URL = "http://127.0.0.1:7125/printer/gcode/script"
 PS_ON_OFF_GCODE = "SET_PIN PIN=PS_ON VALUE=0"
+POWEROFF_TARGETS = ("poweroff.target", "halt.target")
+REBOOT_TARGETS = ("reboot.target", "kexec.target", "soft-reboot.target")
+
+
+def systemd_jobs():
+    try:
+        completed = subprocess.run(
+            ["systemctl", "list-jobs", "--plain", "--no-legend"],
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return completed.stdout or ""
+
+
+def should_release_relay():
+    jobs = systemd_jobs()
+    if any(target in jobs for target in REBOOT_TARGETS):
+        return False
+    return any(target in jobs for target in POWEROFF_TARGETS)
 
 
 def send_poweroff():
@@ -23,6 +48,10 @@ def send_poweroff():
 
 
 def main():
+    if not should_release_relay():
+        print("Not a poweroff/halt transaction; leaving PS_ON high.")
+        return 0
+
     last_error = None
     for _ in range(5):
         try:

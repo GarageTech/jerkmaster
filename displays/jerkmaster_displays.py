@@ -14,7 +14,7 @@ from typing import Optional
 
 import spidev
 from gpiozero import Button, OutputDevice
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageOps
 
 
 WIDTH = 240
@@ -273,11 +273,6 @@ class Moonraker:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             response.read()
 
-    def shutdown_machine(self, timeout=3):
-        request = urllib.request.Request(f"{self.base_url}/machine/shutdown", data=b"", method="POST")
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            response.read()
-
 
 def number(value):
     try:
@@ -413,7 +408,7 @@ def render_eye(side, animation_time):
     return image
 
 
-def render_shutdown(side):
+def render_shutdown(side, brightness=1.0):
     image = Image.new("RGB", (WIDTH, HEIGHT), "#020507")
     draw = ImageDraw.Draw(image)
     draw.arc((10, 10, 230, 230), 25, 335, fill="#334155", width=8)
@@ -422,13 +417,14 @@ def render_shutdown(side):
     if side == "left":
         draw.arc((58, 83, 112, 129), 15, 165, fill=WHITE, width=7)
         draw.arc((128, 83, 182, 129), 15, 165, fill=WHITE, width=7)
-        centered(draw, (120, 158), "SAVING", FONTS["medium"], CYAN)
-        centered(draw, (120, 190), "POWER DOWN", FONTS["small"], MUTED)
+        centered(draw, (120, 158), "Saving...", FONTS["medium"], CYAN)
+        centered(draw, (120, 190), "Powering off...", FONTS["small"], MUTED)
     else:
-        centered(draw, (120, 86), "GOOD", FONTS["logo"], WHITE)
-        centered(draw, (120, 124), "BYE", FONTS["logo"], CYAN)
-        centered(draw, (120, 172), "WAIT...", FONTS["label"], MUTED)
-    return image
+        draw.arc((58, 88, 112, 126), 15, 165, fill=WHITE, width=7)
+        draw.arc((128, 88, 182, 126), 15, 165, fill=WHITE, width=7)
+        centered(draw, (120, 158), "Saving...", FONTS["medium"], CYAN)
+        centered(draw, (120, 190), "Powering off...", FONTS["small"], MUTED)
+    return ImageEnhance.Brightness(image).enhance(max(0.2, min(1.0, brightness)))
 
 
 def render_beer_progress(side, telemetry, animation_time, scene_duration=8.0):
@@ -936,6 +932,7 @@ STATUS_DURATION_SECONDS = 45
 LOGO_DURATION_SECONDS = 10
 EYES_DURATION_SECONDS = 18
 BEER_DURATION_SECONDS = 24
+DEMO_BEER_MODE = False
 
 BLACKJACK_STAND_TIMEOUT_SECONDS = 7
 BLACKJACK_RESULT_DURATION_SECONDS = 8
@@ -969,38 +966,57 @@ def play_sound(name):
         pass
 
 
-def request_safe_shutdown(moonraker):
-    script = "\n".join(
-        (
-            "SET_GCODE_VARIABLE MACRO=INPUT_STATE VARIABLE=shutdown_pending VALUE=1",
-            "STOP_DRYING REASON=shutdown",
-            "SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=0",
-            "SET_PIN PIN=dryer_fan VALUE=0",
-            "SET_CHAMBER_LIGHT ON=0",
-            "UPDATE_DELAYED_GCODE ID=BUTTON_LED_EFFECTS DURATION=0.01",
-            "UPDATE_DELAYED_GCODE ID=SAFE_SHUTDOWN_RELAY_FALLBACK DURATION=45",
-        )
-    )
-    moonraker.run_gcode(script)
-    moonraker.shutdown_machine()
+class PowerManager:
+    def __init__(self, moonraker):
+        self.moonraker = moonraker
+        self.shutdown_pending = False
+        self.shutdown_started_at = None
 
-
-def request_local_poweroff():
-    try:
-        subprocess.Popen(
-            ["systemctl", "poweroff"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except OSError:
+    def request_shutdown(self, now):
+        if self.shutdown_pending:
+            return
+        self.shutdown_pending = True
+        self.shutdown_started_at = now
+        play_sound("shutdown")
         try:
-            subprocess.Popen(
-                ["/sbin/poweroff"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except OSError:
+            self.moonraker.run_gcode(self.shutdown_gcode(), timeout=3)
+        except Exception:
             pass
+        self.poweroff_after_linux()
+
+    def cancel_shutdown(self):
+        self.shutdown_pending = False
+        self.shutdown_started_at = None
+
+    def poweroff_after_linux(self):
+        try:
+            subprocess.run(["sync"], check=False, timeout=5)
+        except (OSError, subprocess.SubprocessError):
+            pass
+        for command in (["systemctl", "poweroff"], ["/sbin/poweroff"]):
+            try:
+                subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except OSError:
+                continue
+
+    def play_shutdown_animation(self, left, right, now):
+        elapsed = 0.0 if self.shutdown_started_at is None else now - self.shutdown_started_at
+        brightness = 1.0 - min(0.65, elapsed / 10.0)
+        left.show(render_shutdown("left", brightness))
+        right.show(render_shutdown("right", brightness))
+
+    @staticmethod
+    def shutdown_gcode():
+        return "SAFE_SHUTDOWN"
+
+
+def short_press(telemetry, blackjack_game, now):
+    if telemetry.running:
+        blackjack_game.press(now)
+    else:
+        # Reserved for the local menu/confirm action when a menu UI is added.
+        pass
 
 
 def open_spi(device):
@@ -1051,6 +1067,7 @@ def main():
     right.initialize()
 
     moonraker = Moonraker(MOONRAKER_URL)
+    power = PowerManager(moonraker)
     logo = load_logo()
     telemetry = Telemetry()
     last_telemetry_read = 0.0
@@ -1071,13 +1088,16 @@ def main():
     while True:
         now = time.monotonic()
         try:
+            shutdown_active = power.shutdown_pending or telemetry.shutdown_pending
             telemetry_updated = False
-            if now - last_telemetry_read >= TELEMETRY_REFRESH_SECONDS:
+            if not shutdown_active and now - last_telemetry_read >= TELEMETRY_REFRESH_SECONDS:
                 telemetry = moonraker.read()
                 last_telemetry_read = now
                 telemetry_updated = True
                 if telemetry.shutdown_pending and not shutdown_was_pending:
                     play_sound("shutdown")
+                    power.shutdown_pending = True
+                    power.shutdown_started_at = now
                 shutdown_was_pending = telemetry.shutdown_pending
                 if telemetry.door_open and not door_was_open:
                     play_sound("error")
@@ -1100,11 +1120,7 @@ def main():
             ):
                 user_button_long_press_fired = True
                 local_shutdown_pending = True
-                play_sound("shutdown")
-                try:
-                    request_safe_shutdown(moonraker)
-                except Exception:
-                    request_local_poweroff()
+                power.request_shutdown(now)
 
             if not user_button_pressed and user_button_was_pressed:
                 try:
@@ -1112,8 +1128,7 @@ def main():
                 except Exception:
                     pass
                 if not user_button_long_press_fired:
-                    if telemetry.running:
-                        blackjack_game.press(now)
+                    short_press(telemetry, blackjack_game, now)
                 user_button_pressed_at = 0.0
 
             user_button_was_pressed = user_button_pressed
@@ -1127,10 +1142,9 @@ def main():
                 BLACKJACK_RESULT_DURATION_SECONDS,
             )
 
-            if local_shutdown_pending or telemetry.shutdown_pending:
+            if local_shutdown_pending or power.shutdown_pending or telemetry.shutdown_pending:
                 mode = "shutdown"
-                left.show(render_shutdown("left"))
-                right.show(render_shutdown("right"))
+                power.play_shutdown_animation(left, right, now)
             elif telemetry.door_open:
                 mode = "door"
                 left.show(render_offline("DOOR"))
@@ -1140,7 +1154,7 @@ def main():
                 left.show(render_blackjack_game("left", blackjack_game, now, BLACKJACK_STAND_TIMEOUT_SECONDS))
                 right.show(render_blackjack_game("right", blackjack_game, now, BLACKJACK_STAND_TIMEOUT_SECONDS))
             else:
-                active_beer_duration = BEER_DURATION_SECONDS
+                active_beer_duration = BEER_DURATION_SECONDS if telemetry.running or DEMO_BEER_MODE else 0
                 cycle_duration = (
                     STATUS_DURATION_SECONDS
                     + LOGO_DURATION_SECONDS
@@ -1167,7 +1181,7 @@ def main():
                     left.show(render_eye("left", animation_time))
                     right.show(render_eye("right", animation_time))
 
-                else:
+                elif active_beer_duration > 0:
                     mode = "beer"
                     if last_mode != mode and telemetry.running:
                         play_sound("beer")
@@ -1179,6 +1193,11 @@ def main():
                     )
                     left.show(render_beer_progress("left", telemetry, animation_time, BEER_DURATION_SECONDS))
                     right.show(render_beer_progress("right", telemetry, animation_time, BEER_DURATION_SECONDS))
+                else:
+                    mode = "status"
+                    if telemetry_updated or last_mode != mode:
+                        left.show(render_temperature(telemetry))
+                        right.show(render_process(telemetry))
 
             last_mode = mode
             normalized_result = telemetry.last_result.upper()
@@ -1193,9 +1212,8 @@ def main():
                 last_result_sound = normalized_result
 
         except Exception as error:
-            if local_shutdown_pending:
-                left.show(render_shutdown("left"))
-                right.show(render_shutdown("right"))
+            if local_shutdown_pending or power.shutdown_pending:
+                power.play_shutdown_animation(left, right, time.monotonic())
             else:
                 message = type(error).__name__.upper()
                 left.show(render_offline(message))

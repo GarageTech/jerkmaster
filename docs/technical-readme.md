@@ -44,7 +44,7 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 - SKR-owned button LED effects for ready, running, complete, door-open, emergency, and shutdown states.
 - Raspberry Pi GPIO17 user/action button with short-press action handling and long-press safe shutdown request.
 - Door-open handling that pauses the active drying stage, turns the heater off, switches the chamber light on, updates the round displays, blinks the action LED, and plays an audio cue.
-- Staged safe shutdown that sets a shutdown-pending state, asks Moonraker to shut down the Raspberry Pi, and releases the BTT Relay from a systemd shutdown hook or delayed fallback.
+- Staged safe shutdown owned by the Raspberry Pi display service: shutdown-pending state, load shutdown through Moonraker/Klipper, filesystem sync, Linux poweroff, and BTT Relay release from a poweroff/halt-only systemd hook or delayed hardware failsafe.
 - MAX98357A sound cues driven by the Raspberry Pi display service.
 - Demo mode for testing the interface without connected hardware.
 - Responsive browser UI with no build step.

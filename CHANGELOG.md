@@ -191,6 +191,7 @@ security-related history rewrite does not leave links to superseded commits.
 - Added a dual-display red/green wiring test script and documented the current display, audio, door, button LED, BTT Relay, and safe-shutdown verification commands.
 - Moved the user/action button to Raspberry Pi GPIO17 with internal pull-up handling, kept BTT Relay RESET as wake/restart only, and moved the NC door switch to SKR Z-STOP / `P1.29`.
 - Removed SKR action-button short/long-press assumptions while keeping SKR ownership of the door switch, button LED MOSFETs, heater/fan outputs, and `PS_ON`.
+- Made Raspberry/Python the single owner of Linux shutdown, changed the relay cut service to run only for poweroff/halt and never reboot, increased the Klipper relay fallback to 60 seconds, and limited the beer animation to active drying or demo mode.
 
 ### Fixed
 

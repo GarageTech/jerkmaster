@@ -47,8 +47,10 @@ The updater downloads a temporary ZIP archive, backs up the active `macros.cfg`,
 installs the current macros, copies the interface to `/opt/jerkmaster`, installs
 `jerkmaster.service`, and starts it automatically at boot. It removes its
 temporary files when finished. Run the same commands for future updates.
-The installer also enables `jerkmaster-poweroff-relay.service`, which releases
-the BTT Relay `PS_ON` output late during Raspberry Pi shutdown.
+The installer also enables `jerkmaster-poweroff-relay.service` for
+`poweroff.target` and `halt.target` only. It releases the BTT Relay `PS_ON`
+output late during Raspberry Pi poweroff/halt and must not release `PS_ON`
+during a normal reboot.
 
 User-created and edited ingredients, recipes, and profiles are stored separately
 in `/var/lib/jerkmaster/user-data/`. This directory survives interface updates
@@ -132,6 +134,7 @@ SSR outputs.
 8. Verify that `SAFE_SHUTDOWN` sets the shutdown-pending display state before any relay power cut test.
 9. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
 10. Verify the web-interface E-STOP button.
+11. Verify that a normal reboot keeps `PS_ON` high and the BTT Relay stays on.
 
 Only connect mains-powered loads after these checks and after the installation
 has been reviewed by a qualified electrician.

@@ -99,26 +99,33 @@ Expected behavior:
 Important limitation: the BTT Relay V1.2 is not a PC-style soft power button. It
 does not wait for the button when input power first appears. It auto-starts.
 
-Recommended shutdown behavior from GPIO17 long press or the `SAFE_SHUTDOWN`
-Klipper command:
+Recommended shutdown behavior from GPIO17 long press:
 
 ```text
 Shutdown request
-  -> stop heater
-  -> set the circulation fan safe/off
+  -> Python sends `SAFE_SHUTDOWN` to Klipper
+  -> Klipper stops the heater
+  -> Klipper sets the circulation fan safe/off
   -> set `INPUT_STATE.shutdown_pending=1`
   -> display service shows the shutdown screen and plays the shutdown sound
-  -> request Moonraker `shutdown_machine`
-  -> systemd shutdown service releases `PS_ON` late during Raspberry shutdown
-  -> delayed Klipper fallback releases `PS_ON` after 45 seconds if needed
+  -> Raspberry Pi runs `sync`
+  -> Raspberry Pi runs `systemctl poweroff`
+  -> poweroff/halt-only systemd service releases `PS_ON` late during Linux shutdown
+  -> delayed Klipper fallback releases `PS_ON` after 60 seconds if needed
   -> BTT Relay removes electronics power
 ```
 
 Neither the Raspberry button handler nor the Klipper macro should immediately
 cut `PS_ON`. The installed Raspberry service
-`jerkmaster-poweroff-relay.service` runs during host shutdown and sends
-`SET_PIN PIN=PS_ON VALUE=0` to local Moonraker while Moonraker is still
-available. The 45-second Klipper fallback is only a backup path.
+`jerkmaster-poweroff-relay.service` is wanted only by `poweroff.target` and
+`halt.target`; it is not wanted by `reboot.target`. Its helper also checks the
+active systemd jobs and exits without touching `PS_ON` if a reboot is in
+progress. The 60-second Klipper fallback is only a hardware failsafe in case the
+Raspberry Pi never reaches the late shutdown service.
+
+`SAFE_SHUTDOWN` is a Klipper load-safe/pending macro. It does not initiate
+Linux shutdown. The full software shutdown owner is the Raspberry Pi display
+service handling the GPIO17 long press.
 
 Do not use the BTT Relay as the only heater safety disconnect. It controls
 electronics power only.
@@ -136,6 +143,8 @@ The existing momentary button remains connected to the BTT Relay RESET input.
 The RESET button is treated as a wake/restart button after BTT relay shutdown.
 It is not used as the primary software shutdown request because its relay-side
 signal is 5 V and belongs to the BTT Relay input circuit.
+RESET is not a normal power button; software shutdown is initiated from the
+Raspberry GPIO17 user button.
 
 Do not connect the BTT RESET 5 V signal directly to Raspberry Pi GPIO.
 
@@ -353,14 +362,16 @@ the upper `[all]` section, not in the lower Mainsail-specific `[all]` block.
 The current practical safe-cut sequence is:
 
 ```text
-Shutdown request from GPIO17 long press or SAFE_SHUTDOWN
-  -> stop dryer process
-  -> heater output off
-  -> circulation fan safe/off
+Shutdown request from GPIO17 long press
+  -> Python sends `SAFE_SHUTDOWN`
+  -> Klipper stops dryer process
+  -> Klipper turns heater output off
+  -> Klipper sets circulation fan safe/off
   -> chamber light off
   -> button LEDs enter shutdown-pending pattern
   -> displays show the shutdown screen and play the shutdown sound
-  -> Moonraker is asked to run `shutdown_machine`
+  -> Raspberry Pi syncs the filesystem
+  -> Raspberry Pi starts Linux poweroff
   -> Raspberry shutdown syncs/stops services
   -> `jerkmaster-poweroff-relay.service` sends `SET_PIN PIN=PS_ON VALUE=0`
   -> BTT Relay removes electronics power
@@ -368,11 +379,8 @@ Shutdown request from GPIO17 long press or SAFE_SHUTDOWN
 
 This is a software-controlled safe shutdown path. Do not pull the mains plug as
 the normal shutdown method. If Moonraker host shutdown is unavailable, the
-Klipper fallback releases `PS_ON` after 45 seconds.
-
-The exact implementation can be done through Moonraker remote methods, a
-Klipper macro, and/or a systemd shutdown service. Do not rely on pulling the
-mains plug as a normal shutdown method.
+Klipper fallback releases `PS_ON` after 60 seconds as a hardware failsafe.
+Normal reboot must keep `PS_ON` high.
 
 ## Critical Safety Requirements
 
