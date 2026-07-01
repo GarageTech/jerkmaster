@@ -10,8 +10,18 @@ if [[ "${EUID}" -ne 0 ]]; then
     exec sudo --preserve-env=JERKMASTER_DISPLAY_DIR "$0" "$@"
 fi
 
-apt-get update
-apt-get install -y alsa-utils python3-gpiozero python3-pil python3-spidev fonts-dejavu-core
+APT_PACKAGES=(alsa-utils python3-gpiozero python3-pil python3-spidev fonts-dejavu-core)
+missing_packages=()
+for package in "${APT_PACKAGES[@]}"; do
+    if ! dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
+        missing_packages+=("${package}")
+    fi
+done
+
+if ((${#missing_packages[@]} > 0)); then
+    apt-get update
+    apt-get install -y "${missing_packages[@]}"
+fi
 
 install -d -m 0755 "${INSTALL_DIR}"
 install -m 0755 "${PROJECT_DIR}/displays/jerkmaster_displays.py" "${INSTALL_DIR}/jerkmaster_displays.py"

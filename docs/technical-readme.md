@@ -133,11 +133,12 @@ Use `?lang=en`, `?lang=ru`, or `?lang=ua` to choose a language.
 
 1. Read [the installation guide](installation.md).
 2. Review [the hardware list](hardware.md) and [wiring notes](wiring.md).
-3. Copy and adapt the files from `../klipper/`.
-4. Use the credential-free public archive updater from the [installation guide](installation.md) to install and start the UI.
-5. Verify every pin, sensor type, temperature limit, and electrical protection device.
-6. Test with mains-powered loads physically disconnected.
-7. Connect the UI to Moonraker only after the controller is operating safely.
+3. Run `sudo ./tools/bootstrap.sh` from the Raspberry Pi checkout.
+4. Run `RESTART` in Klipper after bootstrap completes.
+5. Complete the [final hardware checklist](final-checklist.md).
+6. Verify every pin, sensor type, temperature limit, and electrical protection device.
+7. Test with mains-powered loads physically disconnected.
+8. Connect mains loads only after the controller is operating safely.
 
 ## Moonraker Connection
 
@@ -183,7 +184,7 @@ data/          Default ingredients, categories, and profiles
 docs/          Hardware, installation, and wiring notes
 img/           Project logo
 js/            UI, storage, calculation, telemetry, and diagnostics
-klipper/       Klipper, Moonraker, macros, and example G-code
+klipper/       Klipper templates, hardware reference, macros, and example G-code
 recipes/       Default recipe data
 translations/  EN, RU, and UA dictionaries
 tools/         Raspberry Pi web-interface and display installers

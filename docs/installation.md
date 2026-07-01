@@ -3,39 +3,64 @@
 </p>
 
 <p align="center">
-  <a href="../README.md">About</a> ·
-  <a href="technical-readme.md">Technical overview</a> ·
-  <a href="build-notes.md">Build notes</a> ·
-  <a href="about-recipes.md">Recipes</a> ·
-  <a href="installation.md">Installation</a> ·
-  <a href="hardware.md">Hardware</a> ·
-  <a href="wiring.md">Wiring</a> ·
+  <a href="../README.md">About</a> |
+  <a href="technical-readme.md">Technical overview</a> |
+  <a href="build-notes.md">Build notes</a> |
+  <a href="about-recipes.md">Recipes</a> |
+  <a href="installation.md">Installation</a> |
+  <a href="hardware.md">Hardware</a> |
+  <a href="wiring.md">Wiring</a> |
   <a href="../SECURITY.md">Safety</a>
 </p>
 
 # JerkMaster Installation
 
-JerkMaster is designed to run entirely on the Raspberry Pi that hosts Klipper and
-Moonraker. Do not run a second JerkMaster server on another computer. Browsers on
-the local network open the Raspberry-hosted interface.
+JerkMaster runs on the same Raspberry Pi that hosts Klipper and Moonraker. Do
+not run a second local-computer server path; browsers on the LAN open the
+Raspberry-hosted interface.
 
-## 1. Install MainsailOS And Klipper
+## 1. Prerequisites
 
-1. Install MainsailOS on the Raspberry Pi.
-2. Build Klipper firmware for the `LPC1769` used by the BTT SKR 1.4 Turbo and flash the board.
-3. Download the public repository archive or copy the project to the Raspberry Pi.
-4. Copy and adapt the contents of `klipper/` to `~/printer_data/config/`.
-5. Run `ls /dev/serial/by-id/*` and place the correct result in the `[mcu]` section of `printer.cfg`.
-6. Verify and adapt every pin, sensor type, temperature limit, and safety setting in `hardware.cfg`.
-7. Copy examples from `klipper/gcodes/` to `~/printer_data/gcodes/`.
-8. Merge the required sections from `klipper/moonraker.conf` into the active Moonraker configuration.
-9. Restart Moonraker with `sudo systemctl restart moonraker`.
-10. Run `RESTART` in the Klipper console and inspect `~/printer_data/logs/klippy.log`.
+1. Install MainsailOS on the Raspberry Pi 3B+.
+2. Build and flash Klipper firmware for the BTT SKR 1.4 Turbo LPC1769.
+3. Connect the SKR USB cable so it appears under `/dev/serial/by-id/`.
+4. Clone or copy this repository to the Raspberry Pi.
+5. Wire the hardware as documented in [Wiring Notes](wiring.md).
 
-## 2. Install Or Update JerkMaster
+The bootstrap script is intentionally interactive where hardware-specific
+choices matter. It does not guess between multiple MCU serial devices.
 
-The recommended update command downloads the public `main` archive. It does not
-use Git, require a GitHub account, or ask for a repository password:
+## 2. Bootstrap A Fresh Raspberry
+
+From the repository checkout on the Raspberry Pi:
+
+```bash
+sudo ./tools/bootstrap.sh
+```
+
+The bootstrap performs the installation steps that used to be manual:
+
+- installs only missing system packages;
+- detects the SKR MCU serial device and writes it into `printer.cfg`;
+- generates `printer.cfg` from `klipper/printer.cfg.template`;
+- installs `hardware.cfg` from `klipper/hardware.cfg.template`;
+- installs `macros.cfg` and example G-code files;
+- merges the required Moonraker sections into the active `moonraker.conf`;
+- backs up changed Klipper and Moonraker files before replacing or merging;
+- installs the Raspberry web service;
+- installs the dual-display and sound service;
+- optionally enables MAX98357A I2S audio in the upper `[all]` section of
+  `/boot/firmware/config.txt`;
+- optionally runs the display and stereo audio tests.
+
+If the I2S audio option changed `/boot/firmware/config.txt`, reboot the
+Raspberry Pi before testing audio.
+
+## 3. Update An Existing Install
+
+The standard updater refreshes the Raspberry web service, Klipper macros,
+display service, sound assets, and shutdown relay service without changing
+machine-specific `printer.cfg`, `hardware.cfg`, or `moonraker.conf` values:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/GarageTech/jerkmaster/main/tools/update-raspberry-pi.sh -o /tmp/update-jerkmaster.sh
@@ -43,53 +68,39 @@ chmod +x /tmp/update-jerkmaster.sh
 /tmp/update-jerkmaster.sh
 ```
 
-The updater downloads a temporary ZIP archive, backs up the active `macros.cfg`,
-installs the current macros, copies the interface to `/opt/jerkmaster`, installs
-`jerkmaster.service`, and starts it automatically at boot. It removes its
-temporary files when finished. Run the same commands for future updates.
-The installer also enables `jerkmaster-poweroff-relay.service` for
-`poweroff.target` and `halt.target` only. It releases the BTT Relay `PS_ON`
-output late during Raspberry Pi poweroff/halt and must not release `PS_ON`
-during a normal reboot.
+Developers working from a local checkout may run:
 
-User-created and edited ingredients, recipes, and profiles are stored separately
-in `/var/lib/jerkmaster/user-data/`. This directory survives interface updates
-and is shared by every browser. Back it up with:
+```bash
+sudo ./tools/install-raspberry-pi.sh
+sudo ./tools/install-displays.sh
+```
+
+User-created and edited ingredients, recipes, and profiles are stored in
+`/var/lib/jerkmaster/user-data/`. This directory survives interface updates.
+Back it up with:
 
 ```bash
 sudo tar -czf ~/jerkmaster-user-data-backup.tar.gz -C /var/lib/jerkmaster user-data
 ```
 
-Existing edits previously stored in a browser's local storage are not migrated.
+## 4. Open The Interface
 
-Review changes to `printer.cfg`, `hardware.cfg`, and `moonraker.conf` before
-copying or merging them, because the updater intentionally leaves these
-machine-specific serial, pin, and network settings unchanged. Run `RESTART`
-after updating Klipper configuration.
-
-Developers working from a local repository checkout may still run:
-
-```bash
-sudo ./tools/install-raspberry-pi.sh
-```
-
-Open the interface using the Raspberry Pi hostname:
+Open the Raspberry-hosted interface:
 
 ```text
 http://jerkmaster.local:8080/
 ```
 
-The interface always connects to Moonraker on port `7125` of the same Raspberry Pi
+The interface connects to Moonraker on port `7125` of the same Raspberry Pi
 hostname. There is no alternate remote-Moonraker URL.
 
-Useful commands:
+Useful service checks:
 
 ```bash
 sudo systemctl status jerkmaster
 sudo systemctl restart jerkmaster
 sudo journalctl -u jerkmaster -f
 curl -fsS http://127.0.0.1:8080/health
-curl -fsS http://127.0.0.1:8080/api/user-data/recipes
 ```
 
 If `jerkmaster.local` does not resolve, verify the Raspberry Pi hostname with
@@ -104,79 +115,28 @@ Demo mode remains available from the Raspberry-hosted interface:
 http://jerkmaster.local:8080/?demo=1
 ```
 
-## 3. State Restoration
+## 5. Required Verification
 
-Klipper's `DRYER_STATE` macro is the only authoritative source for an active
-drying process. It stores the running flag, recipe, profile, stage, custom
-settings, and elapsed time.
+After bootstrap:
 
-After closing or reopening a browser:
+1. Run `RESTART` in the Klipper console.
+2. Inspect `~/printer_data/logs/klippy.log`.
+3. Complete [Final Hardware Checklist](final-checklist.md).
 
-- if Klipper reports `running=1`, the dashboard restores that exact process;
-- if Klipper reports `running=0`, the dashboard remains stopped and does not
-  restore stale browser state;
-- if Moonraker is temporarily unavailable, the dashboard waits for Klipper
-  instead of guessing whether a process is active.
+The first heater and fan tests must be performed with mains loads physically
+disconnected from SSR outputs. Only connect mains-powered loads after the
+checklist passes and the installation has been reviewed by a qualified
+electrician.
 
-## 4. Test Before Connecting Mains Loads
+## 6. Display And Audio Tests
 
-Perform the first tests with the heater and fan physically disconnected from the
-SSR outputs.
+The display service uses the confirmed Raspberry Pi SPI0 mapping from
+[Wiring Notes](wiring.md). The display runtime keeps the active hardware
+constants in `displays/jerkmaster_displays.py`; there is no separate display
+configuration layer.
 
-1. At room temperature, both NTC sensors must report plausible and stable values.
-2. Run `SET_PIN PIN=dryer_fan VALUE=1`, then `SET_PIN PIN=dryer_fan VALUE=0`.
-3. Verify the chamber NeoPixel line with `SET_CHAMBER_LIGHT ON=1`, then `SET_CHAMBER_LIGHT ON=0`.
-4. Verify `PS_ON` stays high during normal operation with `SET_PIN PIN=PS_ON VALUE=1`; do not test automatic power-off until the relay behavior is understood.
-5. Set a low target with `SET_HEATER_TEMPERATURE HEATER=dryer_heater TARGET=30`.
-6. Verify the SSR input control signal, then stop heating with `STOP_DRYING`.
-7. Verify the Raspberry GPIO17 user button: a short press plays the action
-   sound and a long press shows the shutdown-pending display state.
-8. Verify that `SAFE_SHUTDOWN` sets the shutdown-pending display state before any relay power cut test.
-9. Verify that `DRYER_ESTOP` disables outputs and places Klipper into shutdown.
-10. Verify the web-interface E-STOP button.
-11. Verify that a normal reboot keeps `PS_ON` high and the BTT Relay stays on.
-
-Only connect mains-powered loads after these checks and after the installation
-has been reviewed by a qualified electrician.
-
-## 5. Commands
-
-```gcode
-START_DRYING PROFILE=JERKY_STANDARD RECIPE=pork_classic
-START_DRYING PROFILE=BANANA_CHIPS RECIPE=banana_chips
-START_DRYING PROFILE=CUSTOM TEMP=60 MINUTES=240 RECIPE=pork_classic
-STOP_DRYING
-DRYER_ESTOP
-```
-
-After `DRYER_ESTOP`, run `FIRMWARE_RESTART`.
-
-## 6. Optional Dual Round Status Displays
-
-The display service is read-only and communicates with Moonraker locally. Wire
-both GC9A01 displays as documented in [Wiring Notes](wiring.md), then install
-the service:
-
-```bash
-JERKMASTER_INSTALL_DISPLAYS=1 /tmp/update-jerkmaster.sh
-```
-
-The display script uses the confirmed Raspberry Pi SPI0 mapping from
-[Wiring Notes](wiring.md). The current display runtime keeps its active
-hardware constants in the script, so there is no separate display configuration
-layer to keep in sync.
-
-The same display install also copies the optional MAX98357A sound assets to
-`/opt/jerkmaster-displays/sounds/`. After wiring I2S audio, verify playback with:
-
-```bash
-speaker-test -D hw:1,0 -c 2 -t sine
-/opt/jerkmaster-displays/sounds/play_sound.py startup
-/opt/jerkmaster-displays/sounds/play_sound.py action
-```
-
-To test the display wiring, stop the display service and paint the confirmed
-left display red and right display green:
+To test the display wiring, stop the service and paint the confirmed left
+display red and right display green:
 
 ```bash
 sudo systemctl stop jerkmaster-displays
@@ -184,8 +144,13 @@ sudo /opt/jerkmaster-displays/display_test.py
 sudo systemctl start jerkmaster-displays
 ```
 
-Future runs of the standard updater automatically update an already-installed
-display service and its sound assets.
+To test the MAX98357A stereo output on ALSA `hw:1,0`:
+
+```bash
+speaker-test -D hw:1,0 -c 2 -t sine
+/opt/jerkmaster-displays/sounds/play_sound.py startup
+/opt/jerkmaster-displays/sounds/play_sound.py action
+```
 
 Do not expose JerkMaster or Moonraker directly to the public internet. Use a
 trusted LAN or VPN.
