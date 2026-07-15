@@ -25,7 +25,7 @@ export function setupLanguageSelectors() {
     const currentParams = new URLSearchParams(window.location.search);
 
     document.documentElement.lang = locale;
-    document.querySelectorAll(".page-nav a").forEach((link) => {
+    document.querySelectorAll(".page-nav a, .mobile-bottom-nav a, .mobile-workflow-nav a").forEach((link) => {
         const url = new URL(link.href, window.location.href);
         ["lang", "demo"].forEach((key) => {
             if (currentParams.has(key)) {

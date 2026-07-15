@@ -15,7 +15,7 @@
 
 # Wiring Notes
 
-This document describes the current JerkMaster `0.2.0-alpha` wiring
+This document describes the current JerkMaster `0.2.1-alpha` wiring
 architecture for the reference hardware revision:
 
 - Raspberry Pi 3B+ for UI, round displays, sound, animations, Moonraker access, user/action button, and shutdown request.

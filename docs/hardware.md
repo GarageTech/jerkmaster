@@ -15,7 +15,7 @@
 
 # Reference Hardware
 
-The reference JerkMaster `0.2.0-alpha` hardware revision uses the components
+The reference JerkMaster `0.2.1-alpha` hardware revision uses the components
 below. Equivalent parts can be used only after checking electrical
 compatibility, sensor behavior, power requirements, and safety limits.
 

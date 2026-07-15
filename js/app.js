@@ -124,6 +124,13 @@ async function init() {
 }
 
 function bindEvents() {
+    document.querySelectorAll("[data-mobile-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+            setMobilePanel(button.dataset.mobileTab);
+        });
+    });
+    setMobilePanel(document.querySelector("[data-mobile-tab].active")?.dataset.mobileTab ?? "recipe");
+
     document.querySelectorAll("[data-collapsible-card] .collapse-toggle").forEach((button) => {
         button.addEventListener("click", () => {
             const card = button.closest("[data-collapsible-card]");
@@ -210,6 +217,21 @@ function bindEvents() {
         app.activeProcessKey = null;
         app.dryer.stop("emergency");
     });
+}
+
+function setMobilePanel(panel) {
+    document.querySelectorAll("[data-mobile-tab]").forEach((button) => {
+        const active = button.dataset.mobileTab === panel;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+    });
+    document.querySelectorAll("[data-mobile-panel]").forEach((section) => {
+        section.classList.toggle("mobile-panel-hidden", section.dataset.mobilePanel !== panel);
+    });
+
+    if (panel === "time") {
+        window.setTimeout(() => app.tempChart?.resize(), 0);
+    }
 }
 
 function renderRecipeOptions() {
@@ -567,7 +589,7 @@ async function runMoonrakerCommand(command) {
 function getCurrentProfile() {
     if (isCustomMode()) {
         const { temp, minutes } = getCustomSettings();
-        return { stages: [{ temp, minutes, fan: 100 }] };
+        return { stages: [{ temp, minutes, fan: 100 }, { temp: 0, minutes: 0, fan: 100, until_temp_below: 30 }] };
     }
 
     return app.data.profiles[app.activeProfileId ?? app.selectedRecipe.profile];
@@ -584,7 +606,9 @@ function restoreDryingControls(saved) {
 
 function getStageName(index) {
     if (isCustomMode()) {
-        return app.t("ui.custom_stage", "Custom drying");
+        return index === 0
+            ? app.t("ui.custom_stage", "Custom drying")
+            : app.t("stages.custom.cooling", "Cooling");
     }
 
     const profileId = app.activeProfileId ?? app.selectedRecipe.profile;

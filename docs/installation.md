@@ -121,7 +121,10 @@ After bootstrap:
 
 1. Run `RESTART` in the Klipper console.
 2. Inspect `~/printer_data/logs/klippy.log`.
-3. Complete [Final Hardware Checklist](final-checklist.md).
+3. Run a short `CUSTOM` drying test with loads disconnected and verify that the
+   timed stage enters cooling, waits for chamber temperature to reach 30 C, and
+   only then schedules the ten-minute automatic power-off delay.
+4. Complete [Final Hardware Checklist](final-checklist.md).
 
 The first heater and fan tests must be performed with mains loads physically
 disconnected from SSR outputs. Only connect mains-powered loads after the

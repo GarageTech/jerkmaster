@@ -34,6 +34,8 @@ The current hardware architecture is fixed:
   chamber NeoPixel line, and `PS_ON`.
 - BTT Relay V1.2: wake/restart button and final power cut after Raspberry
   shutdown.
+- Custom drying mode runs the selected temperature/time, then cools the chamber
+  with the fan until 30 C before the ten-minute automatic power-off delay.
 
 ![JerkMaster dehydrator cutaway blueprint](img/docs/illustrations/jerkmaster-cutaway-blueprint.png)
 
@@ -41,13 +43,13 @@ The current hardware architecture is fixed:
 
 | Item | Status |
 |---|---|
-| Version | `0.2.0-alpha` |
+| Version | `0.2.1-alpha` |
 | Hardware | Current Raspberry/SKR split architecture documented |
 | Software | Tested on the working prototype |
 | First production drying run | Completed |
 | Repository visibility | Public |
 
-`VERSION = 0.2.0`
+`VERSION = 0.2.1`
 
 ## Quick Install
 

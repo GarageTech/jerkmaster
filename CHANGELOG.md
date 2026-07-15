@@ -162,6 +162,8 @@ security-related history rewrite does not leave links to superseded commits.
 - Added a periodic active-drying display scene with an animated filling beer glass, bubbles, progress percentage, and remaining time.
 - Added a Raspberry Pi GPIO17 button that triggers a two-screen blackjack animation only during active drying.
 - Expanded the GPIO17 blackjack scene into a playable one-button game with player and dealer hands, hit actions, timed stand, dealer draw rules, and round results.
+- Added a mobile version of the web interface with bottom icon navigation and dashboard workflow tabs for meat/marinade setup, spice mix, drying start, and time monitoring.
+- Changed custom drying so the timed stage cools the chamber to 30 C before `DRYER_COMPLETE` schedules the ten-minute automatic power-off delay.
 - Added `0.1.0-alpha` current-status and known-issues sections to the main README.
 - Expanded `.gitignore` for Wi-Fi credentials, Moonraker secrets, API keys, SSH keys, certificates, personal configs, user data, and backups.
 - Replaced the reference-build MCU serial and exact local IP example with public-safe placeholders.
@@ -182,7 +184,7 @@ security-related history rewrite does not leave links to superseded commits.
 - Replaced the generic Python static server with a Raspberry service that disables browser caching and exposes `/health`.
 - Localized ingredient amount numbers and units for English, Russian, and Ukrainian.
 - Finalized the split Raspberry Pi/SKR hardware architecture with SKR-owned button LEDs, concrete door/action inputs, BTT Relay power control, dual GC9A01 display wiring from the display runtime, and MAX98357A sounds used by the display service.
-- Bumped the project and visible interface version to `0.2.0-alpha` for the current hardware revision.
+- Bumped the project and visible interface version to `0.2.1-alpha` for the mobile workflow and custom-cooling release.
 - Added display bench-assembly and live dual-display test photographs to the build notes gallery.
 - Implemented Klipper button LED blink/pulse effects, door-open chamber-light and drying-pause behavior, and action-button long-press display events.
 - Corrected the current hardware documentation to describe the chamber light as an 8x WS2812B line, confirm 32 MHz SPI and pin 20 GND for the round displays, keep the VEVOR dehydrator section limited to original hardware, and record the Noctua NF-A4x10 FLX electronics-bay fans on SKR FAN1/FAN3.

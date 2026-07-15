@@ -28,7 +28,8 @@ The project was built around a modified VEVOR dehydrator, but the software and c
 ## Highlights
 
 - Multi-stage drying profiles with temperature, duration, fan-on stages, and displayed target weight-loss guidance.
-- Custom one-shot drying mode: choose temperature and time, then start.
+- Custom one-shot drying mode: choose temperature and time, then cool to 30 C
+  before the automatic power-off delay starts.
 - Recipe calculator scaled by meat weight.
 - Explicit spice-mix dosage per kilogram of meat.
 - Salinity presets with soy-sauce salt contribution.
@@ -162,6 +163,11 @@ START_DRYING PROFILE=CUSTOM TEMP=60 MINUTES=240 RECIPE=pork_classic
 STOP_DRYING
 DRYER_ESTOP
 ```
+
+`CUSTOM` runs one timed drying stage, then switches the heater off and keeps the
+circulation fan on until the chamber sensor reaches 30 C. Only after that
+cooling check passes does `DRYER_COMPLETE` schedule `DRYER_AUTO_POWER_OFF` for
+600 seconds later.
 
 ## Safety
 

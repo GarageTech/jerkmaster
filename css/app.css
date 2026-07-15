@@ -222,6 +222,11 @@ button.card-header {
     color: #7dd3fc;
 }
 
+.mobile-bottom-nav,
+.mobile-workflow-nav {
+    display: none;
+}
+
 .content-hero {
     display: flex;
     align-items: center;
@@ -851,30 +856,207 @@ input[type="number"] {
 }
 
 @media (max-width: 576px) {
-    .app-header {
-        align-items: stretch;
+    html {
+        scroll-padding-top: .75rem;
+        scroll-padding-bottom: 6.5rem;
+    }
+
+    body {
+        padding-bottom: calc(5.8rem + env(safe-area-inset-bottom));
+    }
+
+    .container-fluid {
+        padding-right: .75rem;
+        padding-left: .75rem;
+    }
+
+    .dashboard-shell {
+        display: flex;
         flex-direction: column;
     }
 
+    .dashboard-shell > * {
+        order: 20;
+    }
+
+    .app-header {
+        align-items: center;
+        flex-direction: row;
+        gap: .5rem;
+        margin-bottom: .75rem !important;
+        order: 0;
+    }
+
     .header-actions {
-        width: 100%;
+        width: auto;
+        margin-left: auto;
         flex-wrap: wrap;
+        justify-content: flex-end;
     }
 
     .page-nav {
-        flex: 1 0 100%;
-        max-width: 100%;
-        width: 100%;
-        overflow-x: auto;
+        display: none;
     }
 
     .jm-logo {
-        width: 150px;
-        height: 54px;
+        width: 190px;
+        height: 58px;
     }
 
     .header-actions .btn {
         flex: 1;
+    }
+
+    .dashboard-shell .app-header {
+        justify-content: flex-end;
+    }
+
+    .dashboard-shell .header-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .language-select {
+        width: 80px;
+        margin-left: auto;
+    }
+
+    .mobile-workflow-nav {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        order: 1;
+        gap: .35rem;
+    }
+
+    .mobile-workflow-nav button {
+        display: grid;
+        min-width: 0;
+        min-height: 58px;
+        place-items: center;
+        gap: .15rem;
+        padding: .45rem .25rem;
+        border: 1px solid var(--jm-border);
+        border-radius: 8px;
+        color: var(--jm-text-muted);
+        background: #101318;
+        text-align: center;
+        transition: color .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .mobile-workflow-nav button.active {
+        color: #fff;
+        border-color: var(--jm-warning);
+        background: #20262e;
+        box-shadow: inset 0 -2px 0 var(--jm-warning);
+    }
+
+    .mobile-workflow-nav i {
+        color: var(--jm-warning);
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .mobile-workflow-nav span {
+        overflow: hidden;
+        max-width: 100%;
+        font-size: .72rem;
+        line-height: 1.1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    [data-mobile-panel].mobile-panel-hidden {
+        display: none !important;
+    }
+
+    .mobile-order-mix {
+        order: 2;
+    }
+
+    .mobile-order-recipe {
+        order: 2;
+    }
+
+    .mobile-order-control {
+        order: 2;
+    }
+
+    .mobile-order-monitor {
+        order: 2;
+    }
+
+    .mobile-order-metrics {
+        order: 3;
+    }
+
+    .mobile-order-profile {
+        order: 4;
+    }
+
+    .mobile-order-controller {
+        order: 5;
+    }
+
+    .mobile-order-chart {
+        order: 6;
+    }
+
+    .mobile-bottom-nav {
+        position: fixed;
+        z-index: 1030;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: .15rem;
+        padding: .45rem .5rem calc(.45rem + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--jm-border);
+        background: rgba(11, 13, 16, .96);
+        box-shadow: 0 -10px 28px rgba(0, 0, 0, .35);
+        backdrop-filter: blur(12px);
+    }
+
+    .mobile-bottom-nav a {
+        display: grid;
+        min-width: 0;
+        min-height: 52px;
+        place-items: center;
+        gap: .15rem;
+        padding: .3rem .15rem;
+        color: var(--jm-text-muted);
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .mobile-bottom-nav a.active {
+        color: #fff;
+        background: #20262e;
+        box-shadow: inset 0 -2px 0 var(--jm-warning);
+    }
+
+    .mobile-bottom-nav i {
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .mobile-bottom-nav span {
+        overflow: hidden;
+        max-width: 100%;
+        font-size: .62rem;
+        line-height: 1.1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .content-hero {
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .content-hero > i {
+        font-size: 2rem;
     }
 
     .ingredient-toolbar {
@@ -899,9 +1081,13 @@ input[type="number"] {
         overflow-x: auto;
     }
 
+    .chart-container {
+        min-height: 240px;
+    }
+
     #emergency-stop-btn {
-        width: 100%;
         min-width: 0;
+        flex: 1 1 calc(100% - 88px);
     }
 
     .ingredient-grid,
@@ -911,6 +1097,61 @@ input[type="number"] {
 
     .drying-control-fields {
         flex-direction: column;
+        gap: .55rem;
+    }
+
+    .drying-control-panel {
+        padding: .75rem;
+    }
+
+    .drying-control-title {
+        gap: .2rem;
+    }
+
+    .drying-control-actions {
+        flex-direction: column;
+    }
+
+    .drying-control-actions .btn {
+        min-height: 44px;
+    }
+
+    .status-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .5rem;
+    }
+
+    #dryer-status {
+        min-width: 0;
+        white-space: normal;
+    }
+
+    #heater-state,
+    .equipment-toggle {
+        min-width: 0;
+        font-size: .82rem;
+    }
+
+    .equipment-toggle {
+        padding-inline: .45rem;
+    }
+
+    .big-value {
+        font-size: 1.85rem;
+    }
+
+    .card-body {
+        padding: .85rem;
+    }
+
+    .collapse-toggle {
+        min-height: 48px;
+        padding: .7rem .85rem;
+    }
+
+    .table-responsive {
+        margin-inline: -.35rem;
+        padding-inline: .35rem;
     }
 
     .process-step .card-body {
