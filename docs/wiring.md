@@ -157,7 +157,7 @@ other switch contact goes to GND. Klipper uses the SKR input pull-up:
 
 ```ini
 [gcode_button action_button]
-pin: ^P1.28
+pin: ^!P1.28
 press_gcode:
     ACTION_BUTTON_PRESSED
 release_gcode:
@@ -271,7 +271,7 @@ Example placeholder:
 
 ```ini
 [gcode_button door_switch]
-pin: ^P1.29
+pin: ^!P1.29
 press_gcode:
     DOOR_CLOSED
 release_gcode:

@@ -194,6 +194,7 @@ security-related history rewrite does not leave links to superseded commits.
 - Moved the user/action button to Raspberry Pi GPIO17 with internal pull-up handling, kept BTT Relay RESET as wake/restart only, and moved the NC door switch to SKR Z-STOP / `P1.29`.
 - Removed SKR action-button short/long-press assumptions while keeping SKR ownership of the door switch, button LED MOSFETs, heater/fan outputs, and `PS_ON`.
 - Moved the user/action button input to SKR Y-STOP / `P1.28` with a GND return, kept the NC door switch on SKR Z-STOP / `P1.29` with a GND return, and updated the display service to consume the Klipper button state.
+- Inverted the SKR action-button and door-switch inputs so GND-closed wiring reads as active only when the button is pressed or the NC door switch is closed.
 - Made Raspberry/Python the single owner of Linux shutdown, changed the relay cut service to run only for poweroff/halt and never reboot, increased the Klipper relay fallback to 60 seconds, and limited the beer animation to active drying or demo mode.
 - Added a Raspberry bootstrap installer that detects the SKR MCU, generates Klipper configuration from templates, merges Moonraker settings with backups, installs services, and offers display/audio tests.
 - Replaced checked-in machine-specific `printer.cfg` and `moonraker.conf` examples with installable templates and a Moonraker merge patch.
