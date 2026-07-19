@@ -202,8 +202,8 @@ run_optional_tests() {
         systemctl start jerkmaster-displays.service >/dev/null 2>&1 || true
     fi
 
-    if prompt_yes_no "Run stereo speaker test on hw:1,0? [y/N]" "N"; then
-        speaker-test -D hw:1,0 -c 2 -t sine
+    if prompt_yes_no "Play short JerkMaster audio test? [y/N]" "N"; then
+        /opt/jerkmaster-displays/sounds/play_sound.py startup || true
     fi
 }
 

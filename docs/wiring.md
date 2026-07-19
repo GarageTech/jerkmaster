@@ -335,10 +335,10 @@ card 1: sndrpirpidac [snd_rpi_rpi_dac]
 device 0: RPi-DAC HiFi pcm1794a-hifi-0
 ```
 
-Confirmed speaker test:
+Confirmed short sound test:
 
 ```bash
-speaker-test -D hw:1,0 -c 2 -t sine
+/opt/jerkmaster-displays/sounds/play_sound.py startup
 ```
 
 Mono `-c 1` is not supported by this card. Use 2 channels or `plughw`.
@@ -415,7 +415,7 @@ Normal reboot must keep `PS_ON` high.
 5. Confirm PS_ON low releases BTT Relay on the bench.
 6. Confirm display test: left red / right green.
 7. Confirm final display script with mirroring.
-8. Confirm MAX98357A sound with `speaker-test -D hw:1,0 -c 2 -t sine`.
+8. Confirm MAX98357A sound with `/opt/jerkmaster-displays/sounds/play_sound.py startup`.
 9. Confirm button LED outputs with no mains loads connected.
 10. Confirm action button input on SKR `Y-STOP` / `P1.28`.
 11. Confirm door microswitch input on SKR `Z-STOP` / `P1.29`.

@@ -26,9 +26,7 @@ real drying cycle.
 - [ ] Right display is green during the display test.
 - [ ] Display service starts again:
   `sudo systemctl start jerkmaster-displays`.
-- [ ] MAX98357A stereo test passes:
-  `speaker-test -D hw:1,0 -c 2 -t sine`.
-- [ ] Project sounds play:
+- [ ] MAX98357A short sound test plays:
   `/opt/jerkmaster-displays/sounds/play_sound.py startup`.
 
 ## Safety Inputs

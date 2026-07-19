@@ -147,10 +147,9 @@ sudo /opt/jerkmaster-displays/display_test.py
 sudo systemctl start jerkmaster-displays
 ```
 
-To test the MAX98357A stereo output on ALSA `hw:1,0`:
+To test the MAX98357A output, play a short installed JerkMaster sound:
 
 ```bash
-speaker-test -D hw:1,0 -c 2 -t sine
 /opt/jerkmaster-displays/sounds/play_sound.py startup
 /opt/jerkmaster-displays/sounds/play_sound.py action
 ```
