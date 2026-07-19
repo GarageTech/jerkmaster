@@ -28,10 +28,10 @@ Raspberry-hosted web interface.
 
 The current hardware architecture is fixed:
 
-- Raspberry Pi 3B+: web UI, dual GC9A01 displays, MAX98357A sound, GPIO17 user
-  button, shutdown request.
+- Raspberry Pi 3B+: web UI, dual GC9A01 displays, MAX98357A sound, and
+  shutdown orchestration.
 - BTT SKR 1.4 Turbo: heater, fans, thermistors, door switch, button LEDs,
-  chamber NeoPixel line, and `PS_ON`.
+  action button, chamber NeoPixel line, and `PS_ON`.
 - BTT Relay V1.2: wake/restart button and final power cut after Raspberry
   shutdown.
 - Custom drying mode runs the selected temperature/time, then cools the chamber

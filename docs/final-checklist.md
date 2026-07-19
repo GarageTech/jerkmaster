@@ -33,14 +33,15 @@ real drying cycle.
 
 ## Safety Inputs
 
-- [ ] Door switch is wired NC to SKR Z-STOP / `P1.29`.
+- [ ] Door switch is wired NC between SKR Z-STOP / `P1.29` and GND.
 - [ ] Door closed triggers `DOOR_CLOSED`.
 - [ ] Door open or disconnected wire triggers `DOOR_OPEN`.
 - [ ] Door open turns the heater off immediately.
 - [ ] Door open shows the warning state on the displays.
 - [ ] Door open blinks the action button LED.
-- [ ] Raspberry GPIO17 button short press triggers the UI action.
-- [ ] Raspberry GPIO17 button long press requests safe shutdown.
+- [ ] Action button is wired between SKR Y-STOP / `P1.28` and GND.
+- [ ] Action button short press triggers the UI action.
+- [ ] Action button long press requests safe shutdown.
 
 ## Low-Voltage Outputs
 
@@ -69,7 +70,7 @@ outputs first.
 ## Relay Shutdown
 
 - [ ] `PS_ON` is high during normal operation.
-- [ ] GPIO17 long press starts the Raspberry-owned shutdown sequence.
+- [ ] SKR Y-STOP / `P1.28` long press starts the Raspberry-owned shutdown sequence.
 - [ ] Shutdown shows the shutdown-pending display state.
 - [ ] Shutdown sound plays.
 - [ ] Late shutdown service releases BTT Relay `PS_ON`.

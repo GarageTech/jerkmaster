@@ -53,7 +53,7 @@ compatibility, sensor behavior, power requirements, and safety limits.
 - Mean Well LRS-150-12
 - BTT Power Shutdown Relay V1.2 for normal electronics power control
 - Power/wake momentary button wired to BTT Relay RESET
-- Action/menu/safe-shutdown momentary button wired to Raspberry Pi GPIO17 / physical pin 11
+- Action/menu/safe-shutdown momentary button wired to SKR `Y-STOP` / `P1.28`
 - Two 12 V-ready button LEDs switched by SKR BED / `P2.5` and HE1 / `P2.4`
 - 8x WS2812B NeoPixel LED line for chamber illumination
 

@@ -18,15 +18,15 @@
 This document describes the current JerkMaster `0.2.1-alpha` wiring
 architecture for the reference hardware revision:
 
-- Raspberry Pi 3B+ for UI, round displays, sound, animations, Moonraker access, user/action button, and shutdown request.
-- BTT SKR 1.4 Turbo for heater, fan, sensors, door switch, button LEDs, and power control.
+- Raspberry Pi 3B+ for UI, round displays, sound, animations, Moonraker access, and shutdown orchestration.
+- BTT SKR 1.4 Turbo for heater, fan, sensors, door switch, action button, button LEDs, and power control.
 - BTT Power Shutdown Relay V1.2 for controlled electronics power cut after shutdown.
 - Two GC9A01 round status displays on Raspberry Pi SPI0.
 - MAX98357A I2S amplifier on Raspberry Pi GPIO18/GPIO19/GPIO21.
 - Factory chamber lighting was 4 pcs 12 V LEDs; JerkMaster control uses the
   replacement 8x WS2812B NeoPixel chamber-light line.
 - One momentary power/wake button connected to BTT Relay RESET.
-- One additional momentary action/shutdown button connected to Raspberry Pi GPIO17.
+- One additional momentary action/shutdown button connected to SKR `Y-STOP` / `P1.28`.
 - Two 12 V-ready button LEDs controlled by SKR MOSFET outputs.
 - Two Noctua NF-A4x10 FLX electronics-bay cooling fans connected to SKR `FAN1`
   and `FAN3`.
@@ -40,8 +40,8 @@ JerkMaster is split into two control layers.
 
 | Layer | Owns | Notes |
 |---|---|---|
-| Raspberry Pi 3B+ | Round displays, sound, UI personality, animations, Moonraker client, GPIO17 user button | Requests shutdown, does not directly switch heater or fan power |
-| BTT SKR 1.4 Turbo | Heater control, fan control, thermistors, door switch, button LEDs, PS_ON | Owns real-time and safety-related low-voltage I/O |
+| Raspberry Pi 3B+ | Round displays, sound, UI personality, animations, Moonraker client, Linux shutdown orchestration | Requests shutdown, does not directly switch heater or fan power |
+| BTT SKR 1.4 Turbo | Heater control, fan control, thermistors, door switch, action button, button LEDs, PS_ON | Owns real-time and safety-related low-voltage I/O |
 | BTT Relay V1.2 | Electronics power cut after shutdown | Not a heater safety device |
 
 The Raspberry Pi is the face of the product. The SKR is the hardware
@@ -57,6 +57,7 @@ controller. The BTT Relay is only a controlled electronics power switch.
 | BTT Relay V1.2 shutdown / hold signal | Free output / PS_ON line | `P2.0` |
 | Power button LED, 12 V-ready | BED MOSFET | `P2.5` |
 | Action button LED, 12 V-ready | HE1 MOSFET | `P2.4` |
+| Action button, NO | Y-STOP | `P1.28` |
 | Drying-chamber NTC | TH0 | `P0.24` |
 | Electronics-bay NTC | TH1 | `P0.23` |
 | Door microswitch, NC | Z-STOP | `P1.29` |
@@ -99,11 +100,11 @@ Expected behavior:
 Important limitation: the BTT Relay V1.2 is not a PC-style soft power button. It
 does not wait for the button when input power first appears. It auto-starts.
 
-Recommended shutdown behavior from GPIO17 long press:
+Recommended shutdown behavior from SKR `Y-STOP` / `P1.28` long press:
 
 ```text
-Shutdown request
-  -> Python sends `SAFE_SHUTDOWN` to Klipper
+Shutdown request from action button long press
+  -> Klipper runs `SAFE_SHUTDOWN`
   -> Klipper stops the heater
   -> Klipper sets the circulation fan safe/off
   -> set `INPUT_STATE.shutdown_pending=1`
@@ -123,9 +124,10 @@ active systemd jobs and exits without touching `PS_ON` if a reboot is in
 progress. The 60-second Klipper fallback is only a hardware failsafe in case the
 Raspberry Pi never reaches the late shutdown service.
 
-`SAFE_SHUTDOWN` is a Klipper load-safe/pending macro. It does not initiate
-Linux shutdown. The full software shutdown owner is the Raspberry Pi display
-service handling the GPIO17 long press.
+`SAFE_SHUTDOWN` is a Klipper load-safe/pending macro. It does not directly cut
+power. The Raspberry Pi display service watches the Klipper shutdown-pending
+state, starts Linux poweroff, and lets the late shutdown service release the
+relay.
 
 Do not use the BTT Relay as the only heater safety disconnect. It controls
 electronics power only.
@@ -144,32 +146,40 @@ The RESET button is treated as a wake/restart button after BTT relay shutdown.
 It is not used as the primary software shutdown request because its relay-side
 signal is 5 V and belongs to the BTT Relay input circuit.
 RESET is not a normal power button; software shutdown is initiated from the
-Raspberry GPIO17 user button.
+SKR `Y-STOP` / `P1.28` action button.
 
 Do not connect the BTT RESET 5 V signal directly to Raspberry Pi GPIO.
 
 ## User / Action Button
 
-The second momentary button is connected to Raspberry Pi GPIO17, physical pin
-11. The other switch contact goes to GND. The display service uses the
-Raspberry Pi internal pull-up.
+The second momentary button is connected to SKR `Y-STOP`, pin `P1.28`. The
+other switch contact goes to GND. Klipper uses the SKR input pull-up:
+
+```ini
+[gcode_button action_button]
+pin: ^P1.28
+press_gcode:
+    ACTION_BUTTON_PRESSED
+release_gcode:
+    ACTION_BUTTON_RELEASED
+```
+
+Recommended wiring is normally open (NO):
+
+```text
+Button released -> input released by pull-up
+Button pressed  -> input connected to GND
+```
 
 | Press type | Function |
 |---|---|
 | Short press | Local action / confirm / menu / display event |
 | Long press, about 2.8 s | Request safe Raspberry shutdown |
 
-Current display-service input:
-
-```python
-USER_BUTTON_PIN = 17
-Button(USER_BUTTON_PIN, pull_up=True, bounce_time=0.05)
-```
-
-The long press is handled by the Raspberry Pi display service, not by
-SKR/Klipper. The Raspberry Pi sets the shutdown-pending state, stops the
-heater/fan safely through Moonraker/Klipper, then asks Linux to shut down. It
-does not cut `PS_ON` directly before Linux shutdown begins.
+Short presses are recorded by Klipper for the Raspberry Pi display service.
+Long press is detected in Klipper, which sets the shutdown-pending state; the
+Raspberry Pi display service then asks Linux to shut down. It does not cut
+`PS_ON` directly before Linux shutdown begins.
 
 Button LED wiring:
 
@@ -362,13 +372,14 @@ the upper `[all]` section, not in the lower Mainsail-specific `[all]` block.
 The current practical safe-cut sequence is:
 
 ```text
-Shutdown request from GPIO17 long press
-  -> Python sends `SAFE_SHUTDOWN`
+Shutdown request from SKR Y-STOP / P1.28 long press
+  -> Klipper runs `SAFE_SHUTDOWN`
   -> Klipper stops dryer process
   -> Klipper turns heater output off
   -> Klipper sets circulation fan safe/off
   -> chamber light off
   -> button LEDs enter shutdown-pending pattern
+  -> display service sees shutdown-pending state
   -> displays show the shutdown screen and play the shutdown sound
   -> Raspberry Pi syncs the filesystem
   -> Raspberry Pi starts Linux poweroff
@@ -406,7 +417,8 @@ Normal reboot must keep `PS_ON` high.
 7. Confirm final display script with mirroring.
 8. Confirm MAX98357A sound with `speaker-test -D hw:1,0 -c 2 -t sine`.
 9. Confirm button LED outputs with no mains loads connected.
-10. Confirm door microswitch input.
-11. Confirm heater/fan SSR input checks without connected loads.
-12. Heater and fan tests under supervision.
-13. Thermal-fuse and physical E-stop verification.
+10. Confirm action button input on SKR `Y-STOP` / `P1.28`.
+11. Confirm door microswitch input on SKR `Z-STOP` / `P1.29`.
+12. Confirm heater/fan SSR input checks without connected loads.
+13. Heater and fan tests under supervision.
+14. Thermal-fuse and physical E-stop verification.

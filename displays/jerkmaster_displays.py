@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import spidev
-from gpiozero import Button, OutputDevice
+from gpiozero import OutputDevice
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageOps
 
 
@@ -209,6 +209,8 @@ class Telemetry:
     last_result: str = "NONE"
     door_open: bool = False
     shutdown_pending: bool = False
+    action_button_pressed: bool = False
+    action_button_short_count: int = 0
     paused: bool = False
 
 
@@ -264,6 +266,8 @@ class Moonraker:
             last_result=str(state.get("last_result", "NONE")),
             door_open=number(input_state.get("door_open")) == 1,
             shutdown_pending=number(input_state.get("shutdown_pending")) == 1,
+            action_button_pressed=number(input_state.get("action_button_pressed")) == 1,
+            action_button_short_count=int(number(input_state.get("action_button_short_count"))),
             paused=number(state.get("paused")) == 1,
         )
 
@@ -914,9 +918,8 @@ RIGHT_BL_PIN = 5         # GPIO5 / pin 29
 
 BL_ACTIVE_LOW = False    # confirmed: GPIO HIGH = backlight ON
 
-# Main user/action button: GPIO17 / physical pin 11 to GND, internal pull-up.
-USER_BUTTON_PIN = 17
-USER_BUTTON_LONG_PRESS_SECONDS = 2.8
+# Main user/action button is handled by SKR Y-STOP / P1.28 to GND.
+# Klipper records short presses and long-press shutdown state for this service.
 
 LEFT_ROTATION = 0
 RIGHT_ROTATION = 0
@@ -926,7 +929,7 @@ LEFT_FLIP = False
 RIGHT_FLIP = False
 
 REFRESH_SECONDS = 0.08
-TELEMETRY_REFRESH_SECONDS = 2.0
+TELEMETRY_REFRESH_SECONDS = 0.25
 
 STATUS_DURATION_SECONDS = 45
 LOGO_DURATION_SECONDS = 10
@@ -1054,8 +1057,6 @@ def main():
         RIGHT_FLIP,
     )
 
-    user_button = Button(int(USER_BUTTON_PIN), pull_up=True, bounce_time=0.05)
-
     reset.on()
     time.sleep(0.05)
     reset.off()
@@ -1074,14 +1075,12 @@ def main():
     started_at = time.monotonic()
 
     blackjack_game = BlackjackGame()
-    user_button_was_pressed = False
-    user_button_pressed_at = 0.0
-    user_button_long_press_fired = False
-    local_shutdown_pending = False
     last_mode = None
     last_result_sound = None
     door_was_open = False
     shutdown_was_pending = False
+    action_button_was_pressed = False
+    last_action_button_short_count = None
 
     play_sound("startup")
 
@@ -1098,40 +1097,23 @@ def main():
                     play_sound("shutdown")
                     power.shutdown_pending = True
                     power.shutdown_started_at = now
+                    power.poweroff_after_linux()
                 shutdown_was_pending = telemetry.shutdown_pending
                 if telemetry.door_open and not door_was_open:
                     play_sound("error")
                 door_was_open = telemetry.door_open
 
-            user_button_pressed = user_button.is_pressed
-            if user_button_pressed and not user_button_was_pressed:
-                user_button_pressed_at = now
-                user_button_long_press_fired = False
-                play_sound("action")
-                try:
-                    moonraker.run_gcode("SET_PIN PIN=action_button_led VALUE=1", timeout=1)
-                except Exception:
-                    pass
+                if telemetry.action_button_pressed and not action_button_was_pressed:
+                    action_button_was_pressed = True
+                    play_sound("action")
+                elif not telemetry.action_button_pressed and action_button_was_pressed:
+                    action_button_was_pressed = False
 
-            if (
-                user_button_pressed
-                and not user_button_long_press_fired
-                and now - user_button_pressed_at >= USER_BUTTON_LONG_PRESS_SECONDS
-            ):
-                user_button_long_press_fired = True
-                local_shutdown_pending = True
-                power.request_shutdown(now)
-
-            if not user_button_pressed and user_button_was_pressed:
-                try:
-                    moonraker.run_gcode("UPDATE_DELAYED_GCODE ID=BUTTON_LED_EFFECTS DURATION=0.01", timeout=1)
-                except Exception:
-                    pass
-                if not user_button_long_press_fired:
+                if last_action_button_short_count is None:
+                    last_action_button_short_count = telemetry.action_button_short_count
+                elif telemetry.action_button_short_count != last_action_button_short_count:
+                    last_action_button_short_count = telemetry.action_button_short_count
                     short_press(telemetry, blackjack_game, now)
-                user_button_pressed_at = 0.0
-
-            user_button_was_pressed = user_button_pressed
 
             if not telemetry.running:
                 blackjack_game.reset()
@@ -1142,7 +1124,7 @@ def main():
                 BLACKJACK_RESULT_DURATION_SECONDS,
             )
 
-            if local_shutdown_pending or power.shutdown_pending or telemetry.shutdown_pending:
+            if power.shutdown_pending or telemetry.shutdown_pending:
                 mode = "shutdown"
                 power.play_shutdown_animation(left, right, now)
             elif telemetry.door_open:
@@ -1212,7 +1194,7 @@ def main():
                 last_result_sound = normalized_result
 
         except Exception as error:
-            if local_shutdown_pending or power.shutdown_pending:
+            if power.shutdown_pending:
                 power.play_shutdown_animation(left, right, time.monotonic())
             else:
                 message = type(error).__name__.upper()
